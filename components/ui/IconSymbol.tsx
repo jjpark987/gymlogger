@@ -9,8 +9,8 @@ import { OpaqueColorValue, StyleProp, ViewStyle, TextStyle } from 'react-native'
 const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
-  'dumbbell.fill.': 'dumbbell',
-  'clock.fill?': 'clock',
+  'house.fill': 'home',
+  'paperplane.fill': 'send',
   'figure.strengthtraining.traditional?': 'workout',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
