@@ -5,17 +5,19 @@ export interface Day {
 
 export interface Exercise {
   id: number;
+  dayId: number;
   name: string;
   isOneArm: boolean;
+  weight: number;
+  orderNum: number;
 }
 
 export interface Log {
   id: number;
   exerciseId: number;
   weight: number;
-  isLeft: boolean | null;
   setNum: number;
+  isLeft: boolean | null;
   reps: number;
   createdAt: string;
-  updatedAt: string;
 }

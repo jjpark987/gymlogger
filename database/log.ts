@@ -1,46 +1,51 @@
-import { getDatabase } from './index';
+import { getDatabase } from './database';
+import { Log } from './types';
 
 export async function setupLogTable() {
-  await getDatabase().execAsync(`
+  const db = await getDatabase();
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       exerciseId INTEGER NOT NULL,
       weight REAL NOT NULL,
-      isLeft INTEGER CHECK (isLeft IN (0, 1)),  -- NULL if two-handed
       setNum INTEGER NOT NULL CHECK (setNum BETWEEN 1 AND 4),
+      isLeft INTEGER CHECK (isLeft IN (0, 1)),
       reps INTEGER NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      
       FOREIGN KEY (exerciseId) REFERENCES exercise(id) ON DELETE CASCADE
     );
   `);
 }
 
-export async function insertLog(
-  exerciseId: number,
-  weight: number,
-  isLeft: boolean | null,
-  setNum: number,
-  reps: number
-) {
-  const result = await getDatabase().runAsync(
+export async function insertLog(exerciseId: number, weight: number, isLeft: boolean | null, setNum: number, reps: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
     `INSERT INTO log (exerciseId, weight, isLeft, setNum, reps) VALUES (?, ?, ?, ?, ?)`,
     [exerciseId, weight, isLeft !== null ? (isLeft ? 1 : 0) : null, setNum, reps]
   );
-  return result.lastInsertRowId;
 }
 
-export async function getLogsByExercise(exerciseId: number) {
-  return await getDatabase().getAllAsync('SELECT * FROM log WHERE exerciseId = ?', [exerciseId]);
+export async function getLogsByExercise(exerciseId: number): Promise<Log[]> {
+  const db = await getDatabase();
+  return await db.getAllAsync(
+    'SELECT * FROM log WHERE exerciseId = ?', 
+    [exerciseId]
+  ) as Log[];
 }
 
-export async function updateLog(id: number, weight: number, reps: number) {
-  await getDatabase().runAsync(
-    `UPDATE log SET weight = ?, reps = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+export async function updateLog(id: number, weight: number, reps: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    `UPDATE log SET weight = ?, reps = ? WHERE id = ?`,
     [weight, reps, id]
   );
 }
 
-export async function deleteLog(id: number) {
-  await getDatabase().runAsync('DELETE FROM log WHERE id = ?', [id]);
+export async function deleteLog(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    'DELETE FROM log WHERE id = ?', 
+    [id]
+  );
 }

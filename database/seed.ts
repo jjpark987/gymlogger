@@ -1,7 +1,8 @@
-import { getDatabase } from './index';
+import { getDatabase } from './database';
 
 export async function seedDays() {
-  const db = getDatabase();
+  const db = await getDatabase();
+
   const weekdays = [
     { id: 0, name: 'Monday' },
     { id: 1, name: 'Tuesday' },

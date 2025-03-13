@@ -3,26 +3,32 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-import { setupDatabase } from '@/database';
+import { resetDatabase } from '@/database/database';
+import { DayProvider } from '@/context/DayContext';
+import { setupDatabase } from '@/database/setup';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [dayOfWeek, setDayOfWeek] = useState<string>(new Date().toLocaleString('en-us', { weekday: 'long' }));
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
-    setupDatabase();
-    if (loaded) {
+    async function initDatabase() {
+      // await resetDatabase();
+      await setupDatabase();
       SplashScreen.hideAsync();
+    }
+
+    if (loaded) {
+      initDatabase();
     }
   }, [loaded]);
 
@@ -31,12 +37,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-        <Stack.Screen name='+not-found' />
-      </Stack>
-      <StatusBar style='auto' />
-    </ThemeProvider>
+    <DayProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+          <Stack.Screen name='+not-found' />
+        </Stack>
+        <StatusBar style='auto' />
+      </ThemeProvider>
+    </DayProvider>
   );
 }

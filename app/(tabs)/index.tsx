@@ -1,13 +1,57 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
+import { StyleSheet } from 'react-native';
+import { Button, TextInput } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useFocusEffect } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useState } from 'react';
 
-export default function Workout({ dayOfWeek, setDayOfWeek }: { dayOfWeek: string, setDayOfWeek: React.Dispatch<React.SetStateAction<string>> }) {
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+import { useCallback, useState } from 'react';
+import { useDay } from '@/context/DayContext';
+import { Exercise } from '@/database/types';
+import { getExercisesByDay } from '@/database/exercise';
+
+export default function Workout() {
+  const { dayOfWeek } = useDay();
+  const [exercises, setExercises] = useState<(Exercise | null)[]>([]);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [setLogs, setSetLogs] = useState<{ [exerciseId: number]: { left: number[], right: number[] } }>({});
+
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchExercises() {
+        const fetchedExercises = await getExercisesByDay(dayOfWeek.id);
+        setExercises(fetchedExercises);
+      }
+      fetchExercises();
+      setSelectedExercise(null);
+    }, [dayOfWeek.id])
+  );
+
+  async function createLog(exercise: Exercise | null) {
+    if (!exercise) {
+      console.log('Schedule an exercise first');
+      return;
+    }
+    setSelectedExercise(exercise);
+  }
+
+  function handleRepsChange(exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) {
+    setSetLogs((prevLogs) => {
+      const updatedLogs = { ...prevLogs };
+      const reps = [...(updatedLogs[exerciseId]?.[isLeft ? 'left' : 'right'] || [0, 0, 0, 0])];
+
+      reps[setIndex] = value ? parseInt(value, 10) || 0 : 0;
+
+      updatedLogs[exerciseId] = {
+        left: isLeft !== false ? reps : updatedLogs[exerciseId]?.left || [0, 0, 0, 0],
+        right: isLeft !== true ? reps : updatedLogs[exerciseId]?.right || [0, 0, 0, 0]
+      };
+
+      return updatedLogs;
+    });
+  }
 
   return (
     <ParallaxScrollView 
@@ -16,40 +60,109 @@ export default function Workout({ dayOfWeek, setDayOfWeek }: { dayOfWeek: string
         <IconSymbol size={300} name='figure.strengthtraining.traditional' color='white' style={styles.background} />
       }
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{dayOfWeek}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type='defaultSemiBold'>app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type='defaultSemiBold'>
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps='handled'
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        {dayOfWeek.id === 5 || dayOfWeek.id === 6 ? (
+          <>
+            <ThemedView style={styles.titleContainer}>
+              <ThemedText type='title'>{dayOfWeek.name}</ThemedText>
+            </ThemedView>
+            <ThemedText>REST DAY</ThemedText>
+          </>
+        ) : (
+          selectedExercise ? (
+            <>
+              <ThemedView style={styles.titleContainer}>
+                <ThemedText type='title'>{selectedExercise.name}</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.contentContainer}>
+                {selectedExercise.isOneArm ? (
+                  <>
+                    <ThemedView style={styles.rowContainer}>
+                      <ThemedView style={styles.column}>
+                        {Array.from({ length: 4 }, (_, index) => (
+                          <TextInput
+                            key={`left-${index}`}
+                            placeholder={`Set ${index + 1}`}
+                            keyboardType='numeric'
+                            value={setLogs[selectedExercise.id]?.left[index]?.toString() || ''}
+                            onChangeText={(text) => handleRepsChange(selectedExercise.id, index, text, true)}
+                            style={styles.input}
+                          />
+                        ))}
+                      </ThemedView>
+                      <ThemedView style={styles.column}>
+                        {Array.from({ length: 4 }, (_, index) => (
+                          <TextInput
+                            key={`right-${index}`}
+                            placeholder={`Set ${index + 1}`}
+                            keyboardType='numeric'
+                            value={setLogs[selectedExercise.id]?.right[index]?.toString() || ''}
+                            onChangeText={(text) => handleRepsChange(selectedExercise.id, index, text, false)}
+                            style={styles.input}
+                          />
+                        ))}
+                      </ThemedView>
+                    </ThemedView>
+                    <Button 
+                      mode='contained'
+                      onPress={() => setSelectedExercise(null)}
+                      style={styles.button} 
+                      labelStyle={styles.buttonLabel}
+                    >
+                      Back
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <ThemedView style={styles.formContainer}>
+                      {Array.from({ length: 4 }, (_, index) => (
+                        <TextInput
+                          key={`set-${index}`}
+                          placeholder={`Set ${index + 1}`}
+                          keyboardType='numeric'
+                          value={setLogs[selectedExercise.id]?.right[index]?.toString() || ''}
+                          onChangeText={(text) => handleRepsChange(selectedExercise.id, index, text, null)}
+                          style={styles.input}
+                        />
+                      ))}
+                    </ThemedView>
+                    <Button 
+                      mode='contained'
+                      onPress={() => setSelectedExercise(null)}
+                      style={styles.button} 
+                      labelStyle={styles.buttonLabel}
+                    >
+                      Back
+                    </Button>
+                  </>
+                )}
+              </ThemedView>
+            </>
+          ) : (
+            <>
+              <ThemedView style={styles.titleContainer}>
+                <ThemedText type='title'>{dayOfWeek.name}</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.contentContainer}>
+                {exercises.map((exercise, index) => (
+                  <Button 
+                    key={index} 
+                    mode='contained' 
+                    onPress={() => createLog(exercise)} 
+                    style={styles.button} 
+                    labelStyle={styles.buttonLabel}
+                  >
+                    {exercise ? exercise.name : '-'}
+                  </Button>
+                ))}
+              </ThemedView>
+            </>
+          )
+        )}
+      </KeyboardAwareScrollView>
     </ParallaxScrollView>
   );
 }
@@ -63,15 +176,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  contentContainer: {
+    gap: 20,
+    marginTop: 20
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  formContainer: {
+    gap: 10
+  },
+  button: {
+    backgroundColor: '#1D3D47',
+    paddingVertical: 5,
+    borderRadius: 5
+  },
+  buttonLabel: {
+    fontSize: 18
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+  },
+  column: {
+    width: '48%',
+    gap: 10
+  },
+  input: {
+    backgroundColor: 'white',
+    borderRadius: 5,
+    fontSize: 18,
+    marginBottom: 10,
   },
 });

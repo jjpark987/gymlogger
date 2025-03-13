@@ -1,7 +1,9 @@
-import { getDatabase } from './index';
+import { getDatabase } from './database';
+import { Day } from './types';
 
 export async function setupDayTable() {
-  await getDatabase().execAsync(`
+  const db = await getDatabase();
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS day (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL
@@ -9,15 +11,15 @@ export async function setupDayTable() {
   `);
 }
 
-export async function insertDay(name: string) {
-  const result = await getDatabase().runAsync(
+export async function insertDay(name: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
     `INSERT INTO day (name) VALUES (?) ON CONFLICT(name) DO NOTHING;`,
     [name]
   );
-  return result.lastInsertRowId;
 }
 
-export async function getDays(): Promise<{ id: number; name: string }[]> {
-  const result = await getDatabase().getAllAsync('SELECT * FROM day;');
-  return result as { id: number; name: string }[];
+export async function getDays(): Promise<Day[]> {
+  const db = await getDatabase();
+  return await db.getAllAsync('SELECT * FROM day;') as Day[];
 }
