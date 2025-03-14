@@ -1,92 +1,76 @@
-import { StyleSheet, Image, Platform } from 'react-native';
-
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
+import { StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { Day, Exercise, Log } from '@/database/types';
+import { ViewWeeks } from '@/components/historyTab/ViewWeeks';
+import { getLoggedDaysByWeek, getLoggedExercisesByDay, getLoggedWeeks } from '@/database/log';
+import { ViewDays } from '@/components/historyTab/ViewDays';
 
 export default function History() {
-  return (
-    <ParallaxScrollView 
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D6A47' }}
-      headerImage={
-        <IconSymbol size={300} name='clock.badge.questionmark' color='white' style={styles.background} />
+  const [weeks, setWeeks] = useState<(string[] | null)>(null);
+  const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
+  const [days, setDays] = useState<(string | null)[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchWeeks() {
+        const fetchedWeeks = await getLoggedWeeks();
+        setWeeks(fetchedWeeks);
       }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>History</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title='File-based routing'>
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type='defaultSemiBold'>app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type='defaultSemiBold'>app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type='defaultSemiBold'>app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href='https://docs.expo.dev/router/introduction'>
-          <ThemedText type='link'>Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title='Android, iOS, and web support'>
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type='defaultSemiBold'>w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title='Images'>
-        <ThemedText>
-          For static images, you can use the <ThemedText type='defaultSemiBold'>@2x</ThemedText> and{' '}
-          <ThemedText type='defaultSemiBold'>@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href='https://reactnative.dev/docs/images'>
-          <ThemedText type='link'>Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title='Custom fonts'>
-        <ThemedText>
-          Open <ThemedText type='defaultSemiBold'>app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href='https://docs.expo.dev/versions/latest/sdk/font'>
-          <ThemedText type='link'>Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title='Light and dark mode components'>
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type='defaultSemiBold'>useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href='https://docs.expo.dev/develop/user-interface/color-themes/'>
-          <ThemedText type='link'>Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title='Animations'>
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type='defaultSemiBold'>components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type='defaultSemiBold'>react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type='defaultSemiBold'>components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
+      fetchWeeks();
+      setSelectedExercise(null);
+      setSelectedDay(null);
+      setSelectedWeek(null);
+    }, [])
+  );
+
+  async function fetchDays(week: string) {
+    setSelectedWeek(week);
+    const fetchedDays = await getLoggedDaysByWeek(week);
+    setDays(fetchedDays);
+  }
+  
+  async function fetchExercises(day: string) {
+    setSelectedDay(day);
+    const fetchedExercises = await getLoggedExercisesByDay(day);
+    setExercises(fetchedExercises);
+  }
+
+  return (
+    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D6A47' }} headerImage={<IconSymbol size={300} name='list.clipboard' color='white' style={styles.background} />}>
+      <KeyboardAwareScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
+        {/* intital page will show History as title and list as buttons each week. When pressing on a week, it will show the five days Monday thru Friday (title now dispalys the week (2/1/25 - 2/8/25)). When pressing on a day, it will show all four exercises (title now shows day and date (Monday 2/1/25)). When pressing on an exercise, it should show all logs for that exercise (title now appends the exercise name (Monday 2/1/25: DB Bicep Curl)). */}
+        {selectedWeek ? (
+          selectedDay ? (
+            selectedExercise ? (
+              // <ExerciseLogs exercise={selectedExercise} />
+              <></>
+            ) : (
+              // <DayExercises day={selectedDay} onSelectExercise={setSelectedExercise} />
+              <></>
+            )
+          ) : (
+            <ViewDays 
+              week={selectedWeek}
+              days={days}
+              onSelectDay={fetchExercises} 
+            />
+          )
+        ) : (
+          <ViewWeeks 
+            weeks={weeks} 
+            onSelectWeek={fetchDays} 
+          />
+        )}
+      </KeyboardAwareScrollView>
     </ParallaxScrollView>
   );
 }

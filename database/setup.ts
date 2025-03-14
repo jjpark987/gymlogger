@@ -10,7 +10,7 @@ export async function setupDatabase() {
   try {
     await setupDayTable();
     await setupExerciseTable();
-    // await setupLogTable();
+    await setupLogTable();
     await seedDays();
 
     console.log('✅ SQLite database initialized');

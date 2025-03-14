@@ -12,6 +12,12 @@ export interface Exercise {
   orderNum: number;
 }
 
+export interface NewExercise {
+  name: string;
+  isOneArm: boolean;
+  weight: number;
+}
+
 export interface Log {
   id: number;
   exerciseId: number;
@@ -21,3 +27,10 @@ export interface Log {
   reps: number;
   createdAt: string;
 }
+
+export interface DayLog {
+  left: number[];
+  right: number[];
+}
+
+export type DayLogs = { [exerciseId: number]: DayLog };
