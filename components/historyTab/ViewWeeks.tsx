@@ -2,10 +2,11 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+import { LoggedWeek } from '@/database/types';
 
 interface ViewWeeksProps {
-  weeks: string[] | null;
-  onSelectWeek: (week: string) => void;
+  weeks: LoggedWeek[] | null;
+  onSelectWeek: (week: LoggedWeek) => void;
 }
 
 export function ViewWeeks({ weeks, onSelectWeek }: ViewWeeksProps) {
@@ -24,7 +25,7 @@ export function ViewWeeks({ weeks, onSelectWeek }: ViewWeeksProps) {
               style={styles.button}
               labelStyle={styles.buttonLabel}
             >
-              {week}
+              {week.display}
             </Button>
           ))
         ) : (
@@ -47,7 +48,8 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#1D6A47',
     paddingVertical: 5,
-    borderRadius: 5
+    borderRadius: 5,
+    height: 50,
   },
   buttonLabel: {
     fontSize: 18

@@ -1,18 +1,18 @@
+import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
-import { useCallback, useState } from 'react';
 import { useDay } from '@/context/DayContext';
 import { DayLogs, Exercise } from '@/database/types';
 import { getExercisesByDay } from '@/database/exercise';
+import { insertDayLogs } from '@/database/log';
 import { ExerciseSelection } from '@/components/workoutTab/ExerciseSelection';
 import { ExerciseLogging } from '@/components/workoutTab/ExerciseLogging';
 import { RestDay } from '@/components/workoutTab/RestDay';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { insertDayLogs } from '@/database/log';
 
 export default function Workout() {
   const { dayOfWeek } = useDay();
@@ -38,7 +38,7 @@ export default function Workout() {
     }, [dayOfWeek.id])
   );
 
-  function updateLogState(exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) {
+  function onRepsChange(exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) {
     setDayLogs(prevLogs => {
       const updatedLogs = { ...prevLogs };
       const reps = [...(updatedLogs[exerciseId]?.[isLeft ? 'left' : 'right'] || [0, 0, 0, 0])];
@@ -55,16 +55,15 @@ export default function Workout() {
   }
 
   async function saveLogState() {
-    if (!dayLogs) {
-      console.log('No daylogs selected');
-      return;
-    }
+    if (!dayLogs) return;
+
     await insertDayLogs(dayLogs, exercises);
+    await AsyncStorage.removeItem('dayLogs');
     setDayLogs(null);
   }
 
   return (
-    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<IconSymbol size={300} name='list.clipboard' color='white' style={styles.background} />}>
+    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<IconSymbol size={300} name='figure.strengthtraining.traditional' color='white' style={styles.background} />}>
       <KeyboardAwareScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
         {dayOfWeek.id === 5 || dayOfWeek.id === 6 ? (
           <RestDay day={dayOfWeek} />
@@ -72,7 +71,7 @@ export default function Workout() {
           <ExerciseLogging
             selectedExercise={selectedExercise} 
             dayLogs={dayLogs ?? {}}
-            onRepsChange={updateLogState} 
+            onRepsChange={onRepsChange} 
             onBack={() => setSelectedExercise(null)}
           />
         ) : (

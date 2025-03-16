@@ -1,17 +1,18 @@
+import { useCallback, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useFocusEffect } from '@react-navigation/native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
-import { useCallback, useState } from 'react';
 import { getDays } from '@/database/day';
-import { Day, Exercise, NewExercise } from '@/database/types';
+import { ChartData, Day, Exercise, NewExercise } from '@/database/types';
 import { destroyExercise, getExercisesByDay, insertExercise, updateExercise } from '@/database/exercise';
 import { ScheduleOverview } from '@/components/scheduleTab/ScheduleOverview';
 import { ExercisesOverview } from '@/components/scheduleTab/ExercisesOverview';
 import { AddExercise } from '@/components/scheduleTab/AddExercise';
 import { ExerciseDetail } from '@/components/scheduleTab/ExerciseDetail';
+import { getExerciseProgress } from '@/database/log';
 
 export default function Schedule() {
   const [days, setDays] = useState<Day[]>([]);
@@ -24,7 +25,8 @@ export default function Schedule() {
     weight: 0,
   });
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-
+  const [exerciseProgress, setExerciseProgress] = useState<ChartData | null>(null);
+  
   useFocusEffect(
     useCallback(() => {
       async function fetchDays() {
@@ -46,21 +48,13 @@ export default function Schedule() {
 
   async function viewExerciseDetails(exercise: Exercise) {
     setSelectedExercise(exercise);
-    // const logs = await getLogsByExercise(exercise.id);
-    // Shows a line graph and table if logs exist
-
-    console.log('VIEW EXERCISE DETAILS')
+    const progressData = await getExerciseProgress(exercise);
+    setExerciseProgress(progressData);
   }
 
   async function saveNewExercise() {
-    if (!selectedDay) {
-      console.error('No day selected');
-      return;
-    }
-    if (!selectedSlot) {
-      console.error('No order selected');
-      return;
-    }
+    if (!selectedDay) return;
+    if (!selectedSlot) return;
 
     await insertExercise(selectedDay.id, newExercise.name, newExercise.isOneArm, newExercise.weight, selectedSlot);
     setNewExercise({
@@ -73,14 +67,8 @@ export default function Schedule() {
   }
 
   async function saveExercise() {
-    if (!selectedExercise) {
-      console.error('No exercise selected');
-      return;
-    }
-    if (!selectedDay) {
-      console.error('No day selected')
-      return;
-    }
+    if (!selectedExercise) return;
+    if (!selectedDay) return;
 
     await updateExercise(selectedExercise.id, selectedExercise);
     setSelectedExercise(null);
@@ -88,10 +76,7 @@ export default function Schedule() {
   }
 
   async function deleteExercise(selectedExercise: Exercise) {
-    if (!selectedDay) {
-      console.error('No day selected')
-      return;
-    }
+    if (!selectedDay) return;
 
     Alert.alert(
       'Confirm Deletion',
@@ -118,9 +103,10 @@ export default function Schedule() {
           <ExerciseDetail
             exercise={selectedExercise}
             setExercise={setSelectedExercise}
+            progressData={exerciseProgress}
             onSaveExercise={saveExercise}
             onBack={() => setSelectedExercise(null)}
-            onDelete={() => deleteExercise(selectedExercise)}
+            onDeleteExercise={() => deleteExercise(selectedExercise)}
           />
         ) : selectedSlot ? (
           <AddExercise

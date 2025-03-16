@@ -17,107 +17,89 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
       <ThemedView style={styles.titleContainer}>
         <ThemedText type='title'>{selectedExercise.name}</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.contentContainer}>
       {selectedExercise.isOneArm ? (
-        <>
-          <ThemedView style={styles.rowContainer}>
-            <ThemedView style={styles.column}>
-              {Array.from({ length: 4 }, (_, index) => (
-                <TextInput
-                  key={`left-${index}`}
-                  placeholder={`Set ${index + 1}`}
-                  keyboardType='numeric'
-                  value={dayLogs[selectedExercise.id]?.left[index]?.toString() || ''}
-                  onChangeText={text => onRepsChange(selectedExercise.id, index, text, true)}
-                  style={styles.input}
-                />
-              ))}
-            </ThemedView>
-            <ThemedView style={styles.column}>
-              {Array.from({ length: 4 }, (_, index) => (
-                <TextInput
-                  key={`right-${index}`}
-                  placeholder={`Set ${index + 1}`}
-                  keyboardType='numeric'
-                  value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
-                  onChangeText={text => onRepsChange(selectedExercise.id, index, text, false)}
-                  style={styles.input}
-                />
-              ))}
-            </ThemedView>
-          </ThemedView>
-          <Button 
-            mode='contained'
-            onPress={onBack} 
-            style={styles.backButton}
-            labelStyle={styles.buttonLabel}
-          >
-            Back
-          </Button>
-        </>
-      ) : (
-        <>
-          <ThemedView style={styles.formContainer}>
+        <ThemedView style={styles.oneArmLogger}>
+          <ThemedView style={styles.oneArmLoggerCol}>
             {Array.from({ length: 4 }, (_, index) => (
               <TextInput
-                key={`set-${index}`}
+                key={`left-${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
-                value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
-                onChangeText={text => onRepsChange(selectedExercise.id, index, text, null)}
+                value={dayLogs[selectedExercise.id]?.left[index]?.toString() || ''}
+                onChangeText={text => onRepsChange(selectedExercise.id, index, text, true)}
                 style={styles.input}
               />
             ))}
           </ThemedView>
-          <Button 
-            mode='contained'
-            onPress={onBack} 
-            style={styles.backButton}
-            labelStyle={styles.buttonLabel}
-          >
-            Back
-          </Button>
-        </>
+          <ThemedView style={styles.oneArmLoggerCol}>
+            {Array.from({ length: 4 }, (_, index) => (
+              <TextInput
+                key={`right-${index}`}
+                placeholder={`Set ${index + 1}`}
+                keyboardType='numeric'
+                value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
+                onChangeText={text => onRepsChange(selectedExercise.id, index, text, false)}
+                style={styles.input}
+              />
+            ))}
+          </ThemedView>
+        </ThemedView>
+      ) : (
+        <ThemedView style={styles.twoArmLogger}>
+          {Array.from({ length: 4 }, (_, index) => (
+            <TextInput
+              key={`set-${index}`}
+              placeholder={`Set ${index + 1}`}
+              keyboardType='numeric'
+              value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
+              onChangeText={text => onRepsChange(selectedExercise.id, index, text, null)}
+              style={styles.input}
+            />
+          ))}
+        </ThemedView>
       )}
-      </ThemedView>
+      <Button 
+        mode='contained'
+        onPress={onBack} 
+        style={styles.backButton}
+        labelStyle={styles.buttonLabel}
+      >
+        Back
+      </Button>
     </>
   );
 }
 
-
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
-  contentContainer: {
-    gap: 20,
-    marginTop: 20
-  },
-  formContainer: {
-    gap: 10
-  },
-  backButton: {
-    backgroundColor: '#4A2C1D',
-    paddingVertical: 5,
-    borderRadius: 5
-  },
-  buttonLabel: {
-    fontSize: 18
-  },
-  rowContainer: {
+  oneArmLogger: {
     flexDirection: 'row',
     justifyContent: 'space-between', 
+    marginTop: 20
   },
-  column: {
+  oneArmLoggerCol: {
     width: '48%',
-    gap: 10
+    gap: 20
+  },
+  twoArmLogger: {
+    gap: 20,
+    marginTop: 20
   },
   input: {
     backgroundColor: 'white',
     borderRadius: 5,
     fontSize: 18,
-    marginBottom: 10,
+  },
+  backButton: {
+    backgroundColor: '#4A2C1D',
+    paddingVertical: 5,
+    borderRadius: 5,
+    marginTop: 40
+  },
+  buttonLabel: {
+    fontSize: 18
   },
 });

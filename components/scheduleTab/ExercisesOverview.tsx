@@ -58,17 +58,17 @@ export function ExercisesOverview({ day, exercises, onSelectExercise, onSelectSl
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
   contentContainer: {
-    gap: 20,
+    gap: 30,
     marginTop: 20
   },
   button: {
     backgroundColor: '#1D3D6C',
     paddingVertical: 5,
-    borderRadius: 5
+    borderRadius: 5,
+    height: 50,
   },
   buttonLabel: {
     fontSize: 18

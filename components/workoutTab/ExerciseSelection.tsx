@@ -29,14 +29,14 @@ export function ExerciseSelection({ day, exercises, onSelectExercise, onSaveLogs
             {exercise ? exercise.name : '-'}
           </Button>
         ))}
-        <Button
+        {/* <Button
           mode='contained'
           onPress={onSaveLogs}
           style={styles.saveButton}
           labelStyle={styles.buttonLabel}
         >
           Save
-        </Button>
+        </Button> */}
       </ThemedView>
     </>
   );
@@ -45,16 +45,15 @@ export function ExerciseSelection({ day, exercises, onSelectExercise, onSaveLogs
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    gap: 8
   },
   contentContainer: {
-    gap: 20,
+    gap: 40,
     marginTop: 20
   },
   button: {
     backgroundColor: '#1D3D47',
-    paddingVertical: 5,
+    paddingVertical: 10,
     borderRadius: 5
   },
   buttonLabel: {
@@ -63,7 +62,6 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#1D3D47',
     paddingVertical: 5,
-    borderRadius: 5,
+    borderRadius: 5
   }
 });
-

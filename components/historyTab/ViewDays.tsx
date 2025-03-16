@@ -2,42 +2,47 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
-import { Day } from '@/database/types';
+import { LoggedDay, LoggedWeek } from '@/database/types';
 
 interface ViewDaysProps {
-  week: string;
-  days: (string | null)[];
-  onSelectDay: (day: string) => void;
+  week: LoggedWeek;
+  days: (LoggedDay | null)[];
+  onSelectDay: (day: LoggedDay) => void;
+  onBack: () => void;
 }
 
-export function ViewDays({ week, days, onSelectDay }: ViewDaysProps) {
+export function ViewDays({ week, days, onSelectDay, onBack }: ViewDaysProps) {
   return (
     <>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{week}</ThemedText>
+        <ThemedText type='title'>{week.display}</ThemedText>
       </ThemedView>
       <ThemedView style={styles.contentContainer}>
-        {days.length > 0 ? (
-          days.map((day, index) => 
-            day ? (
-              <Button
-                key={index}
-                mode='contained'
-                onPress={() => onSelectDay(day)}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-              >
-                {day}
-              </Button>
-            ) : (
-              <ThemedView key={index} style={styles.placeholderButton}>
-                <ThemedText style={styles.placeholderText}>-</ThemedText>
-              </ThemedView>
-            )
+        {days.map((day, index) =>
+          day ? (
+            <Button
+              key={index}
+              mode='contained'
+              onPress={() => onSelectDay(day)}
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            >
+              {day.display}
+            </Button>
+          ) : (
+            <ThemedView key={index} style={styles.placeholderButton}>
+              <ThemedText style={styles.placeholderText}>-</ThemedText>
+            </ThemedView>
           )
-        ) : (
-          <ThemedText>No logs available</ThemedText>
         )}
+        <Button
+          mode='contained'
+          onPress={onBack}
+          style={styles.backButton}
+          labelStyle={styles.buttonLabel}
+        >
+          Back
+        </Button>
       </ThemedView>
     </>
   );
@@ -55,20 +60,26 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#1D6A47',
     paddingVertical: 5,
-    borderRadius: 5
+    borderRadius: 5,
+    height: 50,
   },
   buttonLabel: {
     fontSize: 18
   },
   placeholderButton: {
-    backgroundColor: '#1D6A47', 
+    backgroundColor: '#1D6A47',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: 'center',
-    justifyContent: 'center',
+    height: 50,
   },
   placeholderText: {
     fontSize: 18
-  }
+  },
+  backButton: {
+    backgroundColor: '#4A2C1D',
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
 });

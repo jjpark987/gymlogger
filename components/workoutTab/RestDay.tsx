@@ -17,7 +17,6 @@ export function RestDay({ day }: { day: Day }) {
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   }
 });

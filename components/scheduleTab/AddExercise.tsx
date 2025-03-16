@@ -17,7 +17,7 @@ export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, on
       <ThemedView style={styles.titleContainer}>
         <ThemedText type='title'>Add Exercise</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.formContainer}>
+      <ThemedView style={styles.contentContainer}>
         <TextInput
           placeholder='Name'
           value={newExercise.name}
@@ -41,7 +41,7 @@ export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, on
           />
         </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.formButtonContainer}>
+      <ThemedView style={styles.buttonContainer}>
         <Button 
           mode='contained' 
           onPress={onSaveNewExercise} 
@@ -66,32 +66,31 @@ export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, on
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
-  formContainer: {
-    gap: 10,
+  contentContainer: {
+    gap: 20,
     marginTop: 20
-  },
-  formButtonContainer: {
-    gap: 20
   },
   input: {
     backgroundColor: 'white',
     borderRadius: 5,
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 18
   },
   switch: {
     transform: [{ scaleX: 1.25 }, { scaleY: 1.25 }],
     marginTop: 10,
-    marginBottom: 30,
     marginLeft: 10
+  },
+  buttonContainer: {
+    gap: 30,
+    marginTop: 30
   },
   button: {
     backgroundColor: '#1D3D6C',
     paddingVertical: 5,
-    borderRadius: 5
+    borderRadius: 5,
+    height: 50,
   },
   buttonLabel: {
     fontSize: 18
@@ -100,5 +99,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A2C1D',
     paddingVertical: 5,
     borderRadius: 5,
+    height: 50,
   }
 });
