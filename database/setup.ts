@@ -1,4 +1,4 @@
-import { debugGetExercises, getDatabase, seedDatabase } from './database';
+import { debugGetExercises, getDatabase, getLogsForExercise2, seedDatabase } from './database';
 import { setupDayTable } from './day';
 import { setupExerciseTable } from './exercise';
 import { debugGetAllLogs, setupLogTable } from './log';
@@ -15,7 +15,8 @@ export async function setupDatabase() {
 
     // await seedDatabase();
     // await debugGetAllLogs();
-    debugGetExercises();
+    // await debugGetExercises();
+    // await getLogsForExercise2();
 
     console.log('✅ SQLite database initialized');
     return db;

@@ -6,7 +6,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 import { getDays } from '@/database/day';
-import { ChartData, Day, Exercise, NewExercise } from '@/database/types';
+import { Day, Exercise, NewExercise, Progress } from '@/database/types';
 import { destroyExercise, getExercisesByDay, insertExercise, updateExercise } from '@/database/exercise';
 import { ScheduleOverview } from '@/components/scheduleTab/ScheduleOverview';
 import { ExercisesOverview } from '@/components/scheduleTab/ExercisesOverview';
@@ -25,8 +25,8 @@ export default function Schedule() {
     weight: 0,
   });
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [exerciseProgress, setExerciseProgress] = useState<ChartData | null>(null);
-  
+  const [progress, setProgress] = useState<Progress | null>(null);
+
   useFocusEffect(
     useCallback(() => {
       async function fetchDays() {
@@ -34,6 +34,7 @@ export default function Schedule() {
         setDays(fetchedDays);
       }
       fetchDays();
+      setProgress(null);
       setSelectedExercise(null);
       setSelectedSlot(null);
       setSelectedDay(null);
@@ -49,7 +50,7 @@ export default function Schedule() {
   async function viewExerciseDetails(exercise: Exercise) {
     setSelectedExercise(exercise);
     const progressData = await getExerciseProgress(exercise);
-    setExerciseProgress(progressData);
+    console.log(progressData)
   }
 
   async function saveNewExercise() {
@@ -63,6 +64,7 @@ export default function Schedule() {
       weight: 0,
     });
     setSelectedSlot(null);
+    setProgress(null);
     await viewExercises(selectedDay.id);
   }
 
@@ -83,9 +85,9 @@ export default function Schedule() {
       `Are you sure you want to delete '${selectedExercise.name}'?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
+        {
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             await destroyExercise(selectedExercise.id);
             setSelectedExercise(null);
@@ -103,9 +105,13 @@ export default function Schedule() {
           <ExerciseDetail
             exercise={selectedExercise}
             setExercise={setSelectedExercise}
-            progressData={exerciseProgress}
+            progress={progress}
+            setProgress={setProgress}
             onSaveExercise={saveExercise}
-            onBack={() => setSelectedExercise(null)}
+            onBack={() => {
+              setSelectedExercise(null);
+              setProgress(null);
+            }}            
             onDeleteExercise={() => deleteExercise(selectedExercise)}
           />
         ) : selectedSlot ? (
@@ -117,15 +123,15 @@ export default function Schedule() {
           />
         ) : selectedDay ? (
           <ExercisesOverview
-            day={selectedDay} 
+            day={selectedDay}
             exercises={dayExercises}
             onSelectExercise={viewExerciseDetails}
             onSelectSlot={setSelectedSlot}
             onBack={() => setSelectedDay(null)}
           />
         ) : (
-          <ScheduleOverview 
-            days={days} 
+          <ScheduleOverview
+            days={days}
             onSelectDay={viewExercises}
           />
         )}

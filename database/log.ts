@@ -1,5 +1,5 @@
 import { getDatabase } from './database';
-import { ChartData, DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek } from './types';
+import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, Progress, WeeklyVolumes } from './types';
 
 export async function setupLogTable() {
   const db = await getDatabase();
@@ -64,24 +64,36 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT DISTINCT strftime('%Y-%m-%d', date(createdAt, 'weekday 0', '-6 days')) AS week_start
-     FROM log
-     ORDER BY week_start DESC;`
+    `SELECT DISTINCT strftime('%Y-%m-%d', date(createdAt, 'weekday 1')) AS week_start
+    FROM log
+    ORDER BY week_start DESC`
   ) as { week_start: string }[];
 
-  if (!results || results.length === 0) return null;
+  if (!results.length) return null;
+  console.log(results);
 
-  return results.map(row => {
-    const date = new Date(row.week_start);
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    const weekNumber = Math.ceil(date.getDate() / 7);
+  const loggedWeeks: LoggedWeek[] = results.map(week => {
+    const weekStartDate = new Date(week.week_start);
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setDate(weekEndDate.getDate() + 6);
+    const endMonth = new Date(weekEndDate.getTime() + weekEndDate.getTimezoneOffset() * 60000).toLocaleString('en-US', { month: 'short' });    
+    const year = weekEndDate.getFullYear();
+
+    let weekNumber: number;
+
+    if (weekStartDate.getMonth() !== new Date(weekEndDate).getUTCMonth()) {
+      weekNumber = 1;
+    } else {
+      weekNumber = Math.ceil(weekEndDate.getDate() / 7) + 1;
+    }
 
     return {
-      display: `${month} W${weekNumber} ${year}`,
-      startDate: row.week_start
+      display: `${endMonth} W${weekNumber} ${year}`,
+      startDate: week.week_start
     };
   });
+  console.log(loggedWeeks)
+  return loggedWeeks;
 }
 
 export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay | null)[]> {
@@ -99,7 +111,7 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
 
   results.forEach(row => {
     const loggedDate = new Date(row.logged_day);
-    const dayOfWeek = loggedDate.getDay(); 
+    const dayOfWeek = loggedDate.getDay();
 
     const index = dayOfWeek - 1;
 
@@ -113,6 +125,7 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
 
   return daysArray;
 }
+
 export async function getLoggedExercisesByDay(date: string): Promise<(Exercise | null)[]> {
   const db = await getDatabase();
 
@@ -128,7 +141,7 @@ export async function getLoggedExercisesByDay(date: string): Promise<(Exercise |
   const exercisesArray: (Exercise | null)[] = [null, null, null, null];
 
   results.forEach((exercise) => {
-    const position = exercise.orderNum - 1; 
+    const position = exercise.orderNum - 1;
     if (position >= 0 && position < 4) {
       exercisesArray[position] = exercise;
     }
@@ -169,27 +182,76 @@ export async function getLogsByExercise(date: string, exercise: Exercise): Promi
   return dayLog;
 }
 
-export async function getExerciseProgress(exercise: Exercise): Promise<ChartData | null> {
+export async function getExerciseProgress(exercise: Exercise): Promise<Progress | null> {
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT createdAt, reps, weight 
-     FROM log 
+    `SELECT createdAt, reps, weight, isLeft FROM log
      WHERE exerciseId = ? 
-     ORDER BY createdAt DESC;`,
+       AND strftime('%w', createdAt) BETWEEN '1' AND '5'
+     ORDER BY createdAt ASC;`,
     [exercise.id]
-  ) as { createdAt: string; reps: number; weight: number }[];
-  console.log(results)
+  ) as { createdAt: string; reps: number; weight: number; isLeft: boolean }[];
+
   if (!results.length) return null;
-  return null
- 
 
-  // const labels = results.map(row =>
-  //   new Date(row.week_start).toLocaleString('en-US', { month: 'short' })
-  // );
-  // const datasets = [{ label: exercise.name, data: results.map(row => Math.min(row.total_reps, 10)), color: () => '#FF5733' }];
+  const weeklyVolumes: WeeklyVolumes = {};
 
-  // return { labels, datasets };
+  results.forEach(({ createdAt, reps, weight, isLeft }) => {
+    const weekStart = new Date(createdAt);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    const weekKey = weekStart.toISOString().split('T')[0];
+
+    if (!weeklyVolumes[weekKey]) {
+      weeklyVolumes[weekKey] = exercise.isOneArm ? { l_volume: 0, r_volume: 0 } : { volume: 0 };
+    }
+
+    if (exercise.isOneArm) {
+      if (isLeft) {
+        weeklyVolumes[weekKey]!.l_volume! += reps * weight;
+      } else {
+        weeklyVolumes[weekKey]!.r_volume! += reps * weight;
+      }
+    } else {
+      weeklyVolumes[weekKey]!.volume! += reps * weight;
+    }
+  });
+
+  const weeks = Object.keys(weeklyVolumes).sort();
+  const lastFiveWeeks = weeks.slice(-5);
+
+  const allWeeks = Array(5).fill(null);
+  lastFiveWeeks.forEach((week, index) => {
+    allWeeks[index] = week;
+  });
+
+  const labels = allWeeks.map(week => {
+    if (!week) return '';
+  
+    const date = new Date(week);
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+  
+    const firstMonday = new Date(date.getFullYear(), date.getMonth(), 1);
+    while (firstMonday.getDay() !== 1) {
+      firstMonday.setDate(firstMonday.getDate() + 1);
+    }
+  
+    const weekNumber = Math.ceil((date.getDate() - firstMonday.getDate() + 1) / 7) + 1;
+  
+    return `${month} W${weekNumber} ${year}`;
+  });
+
+  const datasets = exercise.isOneArm
+    ? [
+        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.l_volume ?? null : null)), color: () => 'yellow' },
+        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.r_volume ?? null : null)), color: () => 'red' }
+      ]
+    : [
+        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.volume ?? null : null)), color: () => 'orange' }
+      ];
+console.log(labels, datasets)
+  return { labels, datasets };
 }
 
 export async function updateLogs(dayLog: DayLogIds): Promise<void> {
@@ -259,5 +321,5 @@ export async function debugGetAllLogs() {
     `SELECT * FROM log ORDER BY createdAt DESC;`
   );
 
-  console.log("📋 Seeded Logs:", results);
+  console.log('📋 Seeded Logs:', results);
 }

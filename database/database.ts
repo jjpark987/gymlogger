@@ -21,6 +21,11 @@ export async function resetDatabase() {
   }
 }
 
+
+
+
+
+
 export async function seedDatabase() {
   const db = await getDatabase();
 
@@ -48,30 +53,46 @@ export async function seedDatabase() {
     return;
   }
 
-  const now = new Date();
   const logs: { exerciseId: number; weight: number; setNum: number; isLeft: boolean | null; reps: number; createdAt: string }[] = [];
 
-  for (let week = 0; week < 5; week++) {
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - week * 7); // Start from a past Monday
+  const logData = {
+    "2025-02-17": {
+      bench: [10, 9, 8, 7],
+      curlL: [10, 10, 8, 7],
+      curlR: [10, 10, 9, 8]
+    },
+    "2025-02-24": {
+      bench: [10, 9, 9, 7],
+      curlL: [10, 10, 9, 7],
+      curlR: [10, 9, 9, 8]
+    },
+    "2025-03-03": {
+      bench: [10, 10, 9, 7],
+      curlL: [10, 10, 9, 7],
+      curlR: [10, 10, 9, 7]
+    },
+    "2025-03-10": null, // Skipped gym
+    "2025-03-17": {
+      bench: [10, 10, 10, 8],
+      curlL: [10, 10, 10, 8],
+      curlR: [10, 10, 10, 8]
+    }
+  };
 
-    for (let dayOffset = 0; dayOffset < 5; dayOffset++) { // Monday to Friday
-      const workoutDate = new Date(weekStart);
-      workoutDate.setDate(weekStart.getDate() + dayOffset);
-      workoutDate.setHours(12, 0, 0, 0); // Normalize time to noon
+  for (const [date, data] of Object.entries(logData)) {
+    if (!data) continue;
 
-      const formattedDate = workoutDate.toISOString().split('T')[0] + " 00:00:00"; // Force proper format
-
-      for (const { id, isOneArm, weight } of exercises) {
+    for (const { id, isOneArm, weight } of exercises) {
+      if (isOneArm) {
+        // Dumbbell Curl (One-arm exercise)
         for (let setNum = 1; setNum <= 4; setNum++) {
-          if (isOneArm) {
-            // One-arm exercise → Insert for both left and right arms
-            logs.push({ exerciseId: id, weight, setNum, isLeft: true, reps: Math.floor(Math.random() * 5) + 6, createdAt: formattedDate });
-            logs.push({ exerciseId: id, weight, setNum, isLeft: false, reps: Math.floor(Math.random() * 5) + 6, createdAt: formattedDate });
-          } else {
-            // Regular exercise
-            logs.push({ exerciseId: id, weight, setNum, isLeft: null, reps: Math.floor(Math.random() * 5) + 6, createdAt: formattedDate });
-          }
+          logs.push({ exerciseId: id, weight, setNum, isLeft: true, reps: data.curlL[setNum - 1], createdAt: `${date} 00:00:00` });
+          logs.push({ exerciseId: id, weight, setNum, isLeft: false, reps: data.curlR[setNum - 1], createdAt: `${date} 00:00:00` });
+        }
+      } else {
+        // Bench Press (Two-arm exercise)
+        for (let setNum = 1; setNum <= 4; setNum++) {
+          logs.push({ exerciseId: id, weight, setNum, isLeft: null, reps: data.bench[setNum - 1], createdAt: `${date} 00:00:00` });
         }
       }
     }
@@ -91,8 +112,20 @@ export async function seedDatabase() {
 }
 
 
+
+
+
+
+
+
 export async function debugGetExercises() {
   const db = await getDatabase();
   const results = await db.getAllAsync(`SELECT * FROM exercise;`);
   console.log("📋 Seeded Exercises:", results);
+}
+
+export async function getLogsForExercise2() {
+  console.log('GETTING LOGS FOR EXERCISE 2')
+  const db = await getDatabase();
+  console.log(await db.getAllAsync(`SELECT * FROM log WHERE exerciseId = 2;`))
 }

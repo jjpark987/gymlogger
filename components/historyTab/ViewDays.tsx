@@ -57,14 +57,14 @@ const styles = StyleSheet.create({
     gap: 20,
     marginTop: 20
   },
+  buttonLabel: {
+    fontSize: 18
+  },
   button: {
     backgroundColor: '#1D6A47',
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
-  },
-  buttonLabel: {
-    fontSize: 18
   },
   placeholderButton: {
     backgroundColor: '#1D6A47',

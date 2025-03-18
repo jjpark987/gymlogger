@@ -38,7 +38,7 @@ export interface LoggedDay {
   date: string;
 }
 
-export interface DayLog {
+interface DayLog {
   left: number[];
   right: number[];
 }
@@ -50,20 +50,26 @@ export interface DayLogIds {
   right: { id: number | null; reps: number }[];
 }
 
-export type DayLogsIds = { [exerciseId: number]: DayLogIds };
-
-
-interface ExerciseProgress {
-  data: number[];
-  color: () => string;
+interface WeeklyVolume {
+  l_volume?: number;
+  r_volume?: number;
+  volume?: number;
 }
 
-interface OneArmExerciseProgress {
-  left: ExerciseProgress;
-  right: ExerciseProgress;
+export type WeeklyVolumes = Record<string, WeeklyVolume>;
+
+export interface Progress {
+  labels: (string | null)[];
+  datasets: {
+    data: (number | null)[];
+    color: () => string;
+  }[]
 }
 
-export interface ChartData {
-  labels: string[];
-  datasets: ExerciseProgress[] | OneArmExerciseProgress[];
-}
+// export interface TableProgress {
+//   week: string[];
+//   datasets: {
+//     label: string;
+//     data: number[];
+//   }[]
+// }
