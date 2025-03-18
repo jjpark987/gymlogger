@@ -6,7 +6,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 import { DayLogIds, Exercise, LoggedDay, LoggedWeek } from '@/database/types';
-import { destroyLogs, getLoggedDaysByWeek, getLoggedExercisesByDay, getLoggedWeeks, getLogsByExercise, updateLogs } from '@/database/log';
+import { destroyLogs, getLoggedDaysByWeek, getLoggedExercisesByDate, getLoggedWeeks, getLogsByExercise, updateLogs } from '@/database/log';
 import { ViewWeeks } from '@/components/historyTab/ViewWeeks';
 import { ViewDays } from '@/components/historyTab/ViewDays';
 import { ViewExercises } from '@/components/historyTab/ViewExercises';
@@ -35,16 +35,14 @@ export default function History() {
   );
 
   async function viewDays(week: LoggedWeek) {
-    console.log(week)
     setSelectedWeek(week);
     const fetchedDays = await getLoggedDaysByWeek(week.startDate);
     setDays(fetchedDays);
-    console.log(fetchedDays)
   }
   
   async function viewExercises(day: LoggedDay) {
     setSelectedDay(day);
-    const fetchedExercises = await getLoggedExercisesByDay(day.date);
+    const fetchedExercises = await getLoggedExercisesByDate(day.date);
     setExercises(fetchedExercises);
   }
 

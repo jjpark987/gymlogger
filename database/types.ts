@@ -59,17 +59,16 @@ interface WeeklyVolume {
 export type WeeklyVolumes = Record<string, WeeklyVolume>;
 
 export interface Progress {
-  labels: (string | null)[];
-  datasets: {
-    data: (number | null)[];
-    color: () => string;
-  }[]
+  datasets: { 
+    data: { 
+      label: string; 
+      value: number | undefined; 
+      hideDataPoint: boolean; 
+    }[]; 
+    lineSegments: { 
+      startIndex: number; 
+      endIndex: number; 
+      color: string; 
+    }[]; 
+  }[];
 }
-
-// export interface TableProgress {
-//   week: string[];
-//   datasets: {
-//     label: string;
-//     data: number[];
-//   }[]
-// }

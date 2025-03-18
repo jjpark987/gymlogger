@@ -36,40 +36,6 @@ export function ExerciseDetail({ exercise, setExercise, progress, setProgress, o
     }, [exercise])
   );
 
-  function processLabels() {
-    if (!progress || !progress.labels) return Array(5).fill('');
-  
-    const labels = ['', '', '', '', ''];
-  
-    progress.labels.forEach((label, index) => {
-      if (label) {
-        const [month, week] = label.split(' ');
-        // console.log(month, week)
-        if (week === 'W1') {
-          labels[index] = month;
-        }
-      }
-    });
-  
-    return labels;
-  }
-
-  function processDatasets() {
-    if (!progress || !progress.datasets) return Array(5).fill(NaN); 
-  
-    const dataArrays = progress.datasets.map(dataset => {
-      const data = dataset.data.map(value => value ?? NaN);
-      return [...new Array(5 - data.length).fill(NaN), ...data];
-    });
-  
-    return dataArrays;
-  }
-
-  function handleBack() {
-    setViewExercise(false); 
-    onBack();
-  }
-
   return (
     <>
       <ThemedView style={styles.titleContainer}>
@@ -84,7 +50,10 @@ export function ExerciseDetail({ exercise, setExercise, progress, setProgress, o
         <UpdateExercise
           exercise={exercise}
           setExercise={setExercise}
-          onBack={handleBack}
+          onBack={async () => {
+            setViewExercise(false);
+            onBack();
+          }}
           onSaveExercise={onSaveExercise}
           onDeleteExercise={onDeleteExercise}
         />
@@ -92,9 +61,10 @@ export function ExerciseDetail({ exercise, setExercise, progress, setProgress, o
         <ExerciseProgress
           exercise={exercise}
           progress={progress}
-          setChartLabels={processLabels}
-          setChartDatasets={processDatasets}
-          onBack={handleBack}
+          onBack={async () => {
+            setViewExercise(false);
+            onBack();
+          }}
         />
       )}
     </>

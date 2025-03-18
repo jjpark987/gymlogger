@@ -1,79 +1,104 @@
 import { Button, DataTable } from 'react-native-paper';
-import { LineChart } from 'react-native-chart-kit';
+import { CurveType, LineChart } from 'react-native-gifted-charts';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
 import { Exercise, Progress } from '@/database/types';
 import { Dimensions, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
 
 interface ExerciseProgressProps {
   exercise: Exercise;
   progress: Progress | null;
-  setChartLabels: () => (string | null)[];
-  setChartDatasets: () => { data: number[] | null[], color: () => string }[];  
   onBack: () => void;
 }
 
-export function ExerciseProgress({ exercise, progress, setChartLabels, setChartDatasets, onBack }: ExerciseProgressProps) {
-  // console.log(progress)
-  // console.log(progress?.datasets)
-  // console.log(setChartLabels())
-  // console.log(setChartDatasets())
+export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgressProps) {
+  const [yOffset, setYOffset] = useState(0);
+
+  useEffect(() => {
+    if (progress) {
+      const yValues = progress.datasets
+        .flatMap(dataset => dataset.data.map(point => point.value))
+        .filter(v => v !== undefined && v !== null);
+
+      if (yValues.length > 0) {
+        setYOffset(Math.min(...yValues) * 0.98);
+      }
+    }
+  }, [progress]);
+
+  function processDatasets(progress: Progress): Progress {
+    return {
+      datasets: progress.datasets.map(dataset => ({
+        ...dataset,
+        data: dataset.data.map(point => ({
+          ...point,
+          label: point.label.includes('W1') ? point.label.split(' ')[0] : ''
+        }))
+      }))
+    };
+  }
+
   return (
     <>
       <ThemedView style={styles.contentContainer}>
-        {progress ? (
+        {progress ?
           <>
-            {/* <LineChart
-              data={{
-                labels: setChartLabels(),
-                datasets: setChartDatasets()
-              }}
-              width={Dimensions.get('window').width}
-              height={350}
-              chartConfig={{
-                backgroundColor: '#121212',
-                backgroundGradientFrom: '#121212',
-                backgroundGradientTo: '#121212',
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              }}
-              bezier
-              withShadow={false}
-              style={styles.lineChart}
-            /> */}
-            <DataTable style={styles.tableContainer}>
-              <DataTable.Header>
-                <DataTable.Title textStyle={styles.tableText}>Week</DataTable.Title>
-                {exercise.isOneArm ? (
-                  <>
-                    <DataTable.Title numeric textStyle={styles.tableText}>Left Volume</DataTable.Title>
-                    <DataTable.Title numeric textStyle={styles.tableText}>Right Volume</DataTable.Title>
-                  </>
-                ) : (
-                  <DataTable.Title numeric textStyle={styles.tableText}>Volume</DataTable.Title>
-                )}
-              </DataTable.Header>
-              {progress?.labels.slice().reverse().map((week, i) => (
-                <DataTable.Row key={week}>
-                  <DataTable.Cell textStyle={styles.tableText}>{week}</DataTable.Cell>
-                  {exercise.isOneArm ? (
-                    <>
-                      <DataTable.Cell numeric textStyle={styles.tableText}>{progress.datasets[0].data[i] || '-'}</DataTable.Cell>
-                      <DataTable.Cell numeric textStyle={styles.tableText}>{progress.datasets[1]?.data[i] || '-'}</DataTable.Cell>
-                    </>
-                  ) : (
-                    <DataTable.Cell numeric textStyle={styles.tableText}>{progress.datasets[0].data[i] || '-'}</DataTable.Cell>
-                  )}
-                </DataTable.Row>
-              ))}
-            </DataTable>
+            {exercise.isOneArm ?
+              <LineChart
+                data={processDatasets(progress).datasets[0].data}
+                lineSegments={progress.datasets[0].lineSegments}
+                color='rgba(255, 255, 0, 0.7)'
+                dataPointsColor='rgba(255, 255, 0, 0.7)'
+                data2={processDatasets(progress).datasets[1].data}
+                lineSegments2={progress.datasets[1].lineSegments}
+                color2='rgba(255, 0, 0, 0.7)'
+                dataPointsColor2='rgba(255, 0, 0, 0.7)'
+                hideRules
+                curved
+                isAnimated
+                initialSpacing={30}
+                width={250}
+                backgroundColor='transparent'
+                xAxisColor='white'
+                xAxisLabelTextStyle={{ color: 'white' }}
+                yAxisColor='white'
+                yAxisTextStyle={{ color: 'white' }}
+                yAxisLabelContainerStyle={{ marginRight: 10 }}
+                yAxisOffset={yOffset}
+                showFractionalValues={true}
+                roundToDigits={0}
+                noOfSections={5}
+              />
+              :
+              <LineChart
+                data={processDatasets(progress).datasets[0].data}
+                lineSegments={progress.datasets[0].lineSegments}
+                hideRules
+                curved
+                isAnimated
+                initialSpacing={30}
+                width={250}
+                backgroundColor='transparent'
+                color='orange'
+                dataPointsColor='orange'
+                xAxisColor='white'
+                xAxisLabelTextStyle={{ color: 'white' }}
+                yAxisColor='white'
+                yAxisTextStyle={{ color: 'white' }}
+                yAxisLabelContainerStyle={{ marginRight: 10 }}
+                yAxisOffset={yOffset}
+                showFractionalValues={true}
+                roundToDigits={0}
+                noOfSections={5}
+              />
+            }
           </>
-        ) : (
+          :
           <>
             <ThemedText>No data available</ThemedText>
           </>
-        )}
+        }
         <Button
           mode='contained'
           onPress={onBack}
@@ -82,6 +107,40 @@ export function ExerciseProgress({ exercise, progress, setChartLabels, setChartD
         >
           Back
         </Button>
+        {progress &&
+          <DataTable style={styles.tableContainer}>
+            <DataTable.Header>
+              <DataTable.Title textStyle={styles.tableText}>Week</DataTable.Title>
+              {exercise.isOneArm ? (
+                <>
+                  <DataTable.Title numeric textStyle={styles.tableText}>Left Volume</DataTable.Title>
+                  <DataTable.Title numeric textStyle={styles.tableText}>Right Volume</DataTable.Title>
+                </>
+              ) : (
+                <DataTable.Title numeric textStyle={styles.tableText}>Volume</DataTable.Title>
+              )}
+            </DataTable.Header>
+            {progress.datasets[0].data.map((point, i) => (
+              <DataTable.Row key={i}>
+                <DataTable.Cell textStyle={styles.tableText}>{point.label}</DataTable.Cell>
+                {exercise.isOneArm ? (
+                  <>
+                    <DataTable.Cell numeric textStyle={styles.tableText}>
+                      {progress.datasets[0].data[i]?.value ?? '-'}
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric textStyle={styles.tableText}>
+                      {progress.datasets[1]?.data[i]?.value ?? '-'}
+                    </DataTable.Cell>
+                  </>
+                ) : (
+                  <DataTable.Cell numeric textStyle={styles.tableText}>
+                    {progress.datasets[0].data[i]?.value ?? '-'}
+                  </DataTable.Cell>
+                )}
+              </DataTable.Row>
+            ))}
+          </DataTable>
+        }
       </ThemedView>
     </>
   );
@@ -90,11 +149,7 @@ export function ExerciseProgress({ exercise, progress, setChartLabels, setChartD
 const styles = StyleSheet.create({
   contentContainer: {
     gap: 50,
-    marginTop: 50
-  },
-  lineChart: {
-    alignSelf: 'center',
-    paddingLeft: 50
+    marginVertical: 50
   },
   tableContainer: {
     backgroundColor: 'transparent',
@@ -109,7 +164,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A2C1D',
     paddingVertical: 5,
     borderRadius: 5,
-    height: 50,
-    marginBottom: 50
+    height: 50
   }
 });

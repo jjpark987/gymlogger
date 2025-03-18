@@ -50,7 +50,7 @@ export default function Schedule() {
   async function viewExerciseDetails(exercise: Exercise) {
     setSelectedExercise(exercise);
     const progressData = await getExerciseProgress(exercise);
-    console.log(progressData)
+    setProgress(progressData);
   }
 
   async function saveNewExercise() {

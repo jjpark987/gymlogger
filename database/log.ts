@@ -64,35 +64,29 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT DISTINCT strftime('%Y-%m-%d', date(createdAt, 'weekday 1')) AS week_start
+    `SELECT DISTINCT strftime('%Y-%m-%d', date(createdAt, 'weekday 1')) AS weekStartDate
     FROM log
-    ORDER BY week_start DESC`
-  ) as { week_start: string }[];
+    ORDER BY weekStartDate DESC`
+  ) as { weekStartDate: string }[];
 
   if (!results.length) return null;
-  console.log(results);
 
   const loggedWeeks: LoggedWeek[] = results.map(week => {
-    const weekStartDate = new Date(week.week_start);
-    const weekEndDate = new Date(weekStartDate);
-    weekEndDate.setDate(weekEndDate.getDate() + 6);
-    const endMonth = new Date(weekEndDate.getTime() + weekEndDate.getTimezoneOffset() * 60000).toLocaleString('en-US', { month: 'short' });    
-    const year = weekEndDate.getFullYear();
+    const weekStartDate = new Date(week.weekStartDate);
 
-    let weekNumber: number;
+    const dayOfMonth = weekStartDate.getDate();
+    const firstDateOfMonth = new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), 1);
+    const firstDayWeekDay = firstDateOfMonth.getDay() || 7; 
 
-    if (weekStartDate.getMonth() !== new Date(weekEndDate).getUTCMonth()) {
-      weekNumber = 1;
-    } else {
-      weekNumber = Math.ceil(weekEndDate.getDate() / 7) + 1;
-    }
-
+    const weekNumber = Math.ceil((dayOfMonth + firstDayWeekDay - 1) / 7);
+    const monthAbbrev = weekStartDate.toLocaleString('en-US', { month: 'short' });
+    
     return {
-      display: `${endMonth} W${weekNumber} ${year}`,
-      startDate: week.week_start
+      display: `${monthAbbrev} W${weekNumber} ${weekStartDate.getFullYear()}`,
+      startDate: week.weekStartDate
     };
   });
-  console.log(loggedWeeks)
+
   return loggedWeeks;
 }
 
@@ -100,25 +94,25 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT DISTINCT substr(createdAt, 1, 10) AS logged_day
+    `SELECT DISTINCT date(createdAt) AS loggedDate
      FROM log
-     WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?, '+4 days')
-     ORDER BY logged_day ASC;`,
+     WHERE date(createdAt) BETWEEN date(?, 'weekday 1') AND date(?, 'weekday 5')
+     ORDER BY loggedDate ASC;`,
     [startDate, startDate]
-  ) as { logged_day: string }[];
+  ) as { loggedDate: string }[];
 
   const daysArray: (LoggedDay | null)[] = [null, null, null, null, null];
 
-  results.forEach(row => {
-    const loggedDate = new Date(row.logged_day);
-    const dayOfWeek = loggedDate.getDay();
+  results.forEach(day => {
+    const loggedDate = new Date(day.loggedDate);
+    const dayOfWeek = loggedDate.getUTCDay();
 
     const index = dayOfWeek - 1;
 
     if (index >= 0 && index <= 4) {
       daysArray[index] = {
-        display: loggedDate.toLocaleDateString('en-US', { weekday: 'long' }),
-        date: row.logged_day
+        display: loggedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }),        
+        date: day.loggedDate
       };
     }
   });
@@ -126,7 +120,7 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
   return daysArray;
 }
 
-export async function getLoggedExercisesByDay(date: string): Promise<(Exercise | null)[]> {
+export async function getLoggedExercisesByDate(date: string): Promise<(Exercise | null)[]> {
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
@@ -218,40 +212,94 @@ export async function getExerciseProgress(exercise: Exercise): Promise<Progress 
   });
 
   const weeks = Object.keys(weeklyVolumes).sort();
-  const lastFiveWeeks = weeks.slice(-5);
+  const lastValidWeek = weeks.length > 0 ? weeks[weeks.length - 1] : null; 
 
-  const allWeeks = Array(5).fill(null);
-  lastFiveWeeks.forEach((week, index) => {
-    allWeeks[index] = week;
-  });
+  if (!lastValidWeek) return null;
 
-  const labels = allWeeks.map(week => {
-    if (!week) return '';
+  const lastFiveWeeks: string[] = [];
+
+  const today = new Date();
+  const latestExpectedWeek = new Date(today);
+  latestExpectedWeek.setDate(today.getDate() - today.getDay() + 1);
+
+  for (let i = 4; i >= 0; i--) {
+    const week = new Date(latestExpectedWeek);
+    week.setDate(latestExpectedWeek.getDate() - i * 7);
+    lastFiveWeeks.push(week.toISOString().split('T')[0]);
+  }
+
+  const labels = lastFiveWeeks.map((week, index) => {
+    const referenceDate = week !== null ? new Date(week) : (lastFiveWeeks[index - 1] ? new Date(lastFiveWeeks[index - 1]!) : new Date());    
+    referenceDate.setDate(referenceDate.getDate() + 7); 
   
-    const date = new Date(week);
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
+    const month = referenceDate.toLocaleString('en-US', { month: 'short' });
+    const year = referenceDate.getFullYear();
   
-    const firstMonday = new Date(date.getFullYear(), date.getMonth(), 1);
+    const firstMonday = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
     while (firstMonday.getDay() !== 1) {
       firstMonday.setDate(firstMonday.getDate() + 1);
     }
   
-    const weekNumber = Math.ceil((date.getDate() - firstMonday.getDate() + 1) / 7) + 1;
+    const weekNumber = Math.ceil((referenceDate.getDate() - firstMonday.getDate() + 1) / 7) + 1;
   
     return `${month} W${weekNumber} ${year}`;
   });
 
   const datasets = exercise.isOneArm
     ? [
-        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.l_volume ?? null : null)), color: () => 'yellow' },
-        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.r_volume ?? null : null)), color: () => 'red' }
+        {
+          data: lastFiveWeeks.map((week, index) => ({
+            label: labels[index],
+            value: weeklyVolumes[week]?.l_volume,
+            hideDataPoint: !(week in weeklyVolumes), 
+          })),
+          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
+            if (index > 0 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
+            }
+            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
+            }
+            return segments;
+          }, [] as { startIndex: number; endIndex: number; color: string }[])
+        },
+        {
+          data: lastFiveWeeks.map((week, index) => ({
+            label: labels[index],
+            value: weeklyVolumes[week]?.r_volume,
+            hideDataPoint: !(week in weeklyVolumes),
+          })),
+          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
+            if (index > 0 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
+            }
+            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
+            }
+            return segments;
+          }, [] as { startIndex: number; endIndex: number; color: string }[])
+        }
       ]
     : [
-        { data: allWeeks.map(week => (week ? weeklyVolumes[week]?.volume ?? null : null)), color: () => 'orange' }
+        {
+          data: lastFiveWeeks.map((week, index) => ({
+            label: labels[index],
+            value: weeklyVolumes[week]?.volume, 
+            hideDataPoint: !(week in weeklyVolumes), 
+          })),
+          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
+            if (index > 0 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
+            }
+            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
+              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
+            }
+            return segments;
+          }, [] as { startIndex: number; endIndex: number; color: string }[])
+        }
       ];
-console.log(labels, datasets)
-  return { labels, datasets };
+
+  return { datasets };
 }
 
 export async function updateLogs(dayLog: DayLogIds): Promise<void> {
