@@ -41,13 +41,27 @@ export default function Workout() {
   function onRepsChange(exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) {
     setDayLogs(prevLogs => {
       const updatedLogs = { ...prevLogs };
-      const reps = [...(updatedLogs[exerciseId]?.[isLeft ? 'left' : 'right'] || [0, 0, 0, 0])];
-      reps[setIndex] = value ? parseInt(value, 10) || 0 : 0;
-      updatedLogs[exerciseId] = {
-        left: isLeft !== false ? reps : updatedLogs[exerciseId]?.left || [0, 0, 0, 0],
-        right: isLeft !== true ? reps : updatedLogs[exerciseId]?.right || [0, 0, 0, 0]
-      };
-  
+
+      if (!updatedLogs[exerciseId]) {
+        updatedLogs[exerciseId] = { left: ['', '', '', ''], right: ['', '', '', ''] };
+      }
+
+      const newReps = value === '' ? '' : Number(value);
+
+      if (isLeft === null) {
+        updatedLogs[exerciseId].left = [...updatedLogs[exerciseId].left];
+        updatedLogs[exerciseId].right = [...updatedLogs[exerciseId].right];
+      
+        updatedLogs[exerciseId].left[setIndex] = newReps;
+        updatedLogs[exerciseId].right[setIndex] = newReps;
+      } else if (isLeft) {
+        updatedLogs[exerciseId].left = [...updatedLogs[exerciseId].left];
+        updatedLogs[exerciseId].left[setIndex] = newReps;
+      } else {
+        updatedLogs[exerciseId].right = [...updatedLogs[exerciseId].right];
+        updatedLogs[exerciseId].right[setIndex] = newReps;
+      }
+
       AsyncStorage.setItem('dayLogs', JSON.stringify(updatedLogs));
   
       return updatedLogs;
@@ -55,12 +69,35 @@ export default function Workout() {
   }
 
   async function saveLogState() {
-    if (!dayLogs) return;
+    if (!dayLogs) {
+        console.log("⚠️ No logs to save. Exiting function.");
+        return;
+    }
 
-    await insertDayLogs(dayLogs, exercises);
-    await AsyncStorage.removeItem('dayLogs');
+    console.log("📝 Saving logs:", JSON.stringify(dayLogs, null, 2));
+
+    try {
+        console.log("📤 Inserting logs into database...");
+        await insertDayLogs(dayLogs, exercises);
+        console.log("✅ Logs successfully inserted into database.");
+    } catch (error) {
+        console.error("❌ Error inserting logs into database:", error);
+        return;
+    }
+
+    try {
+        console.log("🗑️ Removing saved logs from AsyncStorage...");
+        await AsyncStorage.removeItem('dayLogs');
+        console.log("✅ Logs removed from AsyncStorage.");
+    } catch (error) {
+        console.error("❌ Error removing logs from AsyncStorage:", error);
+        return;
+    }
+
+    console.log("🔄 Resetting state: clearing `dayLogs`...");
     setDayLogs(null);
-  }
+    console.log("✅ State reset complete.");
+}
 
   return (
     <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<IconSymbol size={300} name='figure.strengthtraining.traditional' color='white' style={styles.background} />}>

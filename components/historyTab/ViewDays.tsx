@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { LoggedDay, LoggedWeek } from '@/database/types';
 
 interface ViewDaysProps {

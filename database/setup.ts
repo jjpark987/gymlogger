@@ -1,7 +1,7 @@
-import { debugGetExercises, getDatabase, getLogsForExercise2, seedDatabase } from './database';
+import { debugGetAllExercises, debugGetAllLogs, getDatabase, resetDatabase, seedDatabase } from './database';
 import { setupDayTable } from './day';
 import { setupExerciseTable } from './exercise';
-import { debugGetAllLogs, setupLogTable } from './log';
+import { setupLogTable } from './log';
 import { seedDays } from './seed';
 
 export async function setupDatabase() {
@@ -14,9 +14,9 @@ export async function setupDatabase() {
     await seedDays();
 
     // await seedDatabase();
+    // await debugGetAllExercises();
     // await debugGetAllLogs();
-    // await debugGetExercises();
-    // await getLogsForExercise2();
+    // await getLogsForExercise(3);
 
     console.log('✅ SQLite database initialized');
     return db;
@@ -24,4 +24,15 @@ export async function setupDatabase() {
     console.error('❌ Error initializing database:', error);
     throw error;
   }
+}
+
+export async function getLogsForExercise(exerciseId: number) {
+  const db = await getDatabase();
+
+  const results = await db.getAllAsync(
+    `SELECT * FROM log WHERE exerciseId = ? ORDER BY createdAt ASC;`,
+    [exerciseId]
+  );
+  console.log(results)
+  return results;
 }

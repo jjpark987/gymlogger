@@ -29,15 +29,6 @@ export function UpdateExercise({ exercise, setExercise, onBack, onSaveExercise, 
           onChangeText={text => setExercise({ ...exercise, weight: parseFloat(text) || 0 })}
           style={styles.input}
         />
-        <ThemedView>
-          <ThemedText>Is One Arm?</ThemedText>
-          <Switch
-            value={!!exercise.isOneArm}
-            onValueChange={value => setExercise({ ...exercise, isOneArm: value })}
-            trackColor={{ true: '#1D3D6C' }}
-            style={styles.switch}
-          />
-        </ThemedView>
       </ThemedView>
       <ThemedView style={styles.buttonContainer}>
         <Button
@@ -85,8 +76,8 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   buttonContainer: {
-    gap: 30,
-    marginTop: 30
+    gap: 20,
+    marginTop: 20
   },
   buttonLabel: {
     fontSize: 18
@@ -101,13 +92,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A2C1D',
     paddingVertical: 5,
     borderRadius: 5,
+    marginBottom: 50,
     height: 50,
   },
   delButton: {
     backgroundColor: '#6C1D1D',
     paddingVertical: 5,
     borderRadius: 5,
+    marginBottom: 50,
     height: 50,
-    marginVertical: 50,
   }
 });

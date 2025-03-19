@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { Day } from '@/database/types';
 
 export function RestDay({ day }: { day: Day }) {

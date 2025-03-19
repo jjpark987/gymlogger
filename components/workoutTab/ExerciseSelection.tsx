@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { Day, Exercise } from '@/database/types';
 
 interface ExerciseSelectionProps {
@@ -29,14 +30,14 @@ export function ExerciseSelection({ day, exercises, onSelectExercise, onSaveLogs
             {exercise ? exercise.name : '-'}
           </Button>
         ))}
-        {/* <Button
+        <Button
           mode='contained'
           onPress={onSaveLogs}
           style={styles.saveButton}
           labelStyle={styles.buttonLabel}
         >
           Save
-        </Button> */}
+        </Button>
       </ThemedView>
     </>
   );
@@ -51,13 +52,13 @@ const styles = StyleSheet.create({
     gap: 40,
     marginTop: 20
   },
+  buttonLabel: {
+    fontSize: 18
+  },
   button: {
     backgroundColor: '#1D3D47',
     paddingVertical: 10,
     borderRadius: 5
-  },
-  buttonLabel: {
-    fontSize: 18
   },
   saveButton: {
     backgroundColor: '#1D3D47',

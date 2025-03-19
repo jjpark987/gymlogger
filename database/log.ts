@@ -1,5 +1,6 @@
 import { getDatabase } from './database';
-import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, Progress, WeeklyVolumes } from './types';
+import { calculateWeeklyVolumes, createDatasets, generateWeeksAndLabels } from './exerciseProgressUtils';
+import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, LogResult, Progress, WeeklyVolumes } from './types';
 
 export async function setupLogTable() {
   const db = await getDatabase();
@@ -26,37 +27,41 @@ export async function insertDayLogs(dayLogs: DayLogs, exercises: (Exercise | nul
     VALUES (?, ?, ?, ?, ?, datetime('now'))
   `;
 
+  const currentDate = new Date().toISOString();
+
   const insertPromises = [];
 
   for (const exerciseId in dayLogs) {
     const log = dayLogs[exerciseId];
     const exercise = exercises.find(e => e && e.id === Number(exerciseId));
-
+  
     if (!exercise) {
       console.warn(`Exercise with ID ${exerciseId} not found. Skipping.`);
       continue;
     }
-
+  
     for (let i = 0; i < 4; i++) {
       if (exercise.isOneArm) {
-        if (log.left[i] > 0) {
+        if (log.left[i] !== undefined) {
           insertPromises.push(
-            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, true, log.left[i]])
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, true, log.left[i] === '' ? null : log.left[i], currentDate])
           );
         }
-        if (log.right[i] > 0) {
+        if (log.right[i] !== undefined) {
           insertPromises.push(
-            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, false, log.right[i]])
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, false, log.right[i] === '' ? null : log.right[i], currentDate])
           );
         }
       } else {
-        insertPromises.push(
-          db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, null, log.right[i]])
-        );
+        if (log.right[i] !== undefined) {
+          insertPromises.push(
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, null, log.right[i] === '' ? null : log.right[i], currentDate ])
+          );
+        }
       }
     }
-  }
-
+  }  
+  
   await Promise.all(insertPromises);
 }
 
@@ -185,121 +190,19 @@ export async function getExerciseProgress(exercise: Exercise): Promise<Progress 
        AND strftime('%w', createdAt) BETWEEN '1' AND '5'
      ORDER BY createdAt ASC;`,
     [exercise.id]
-  ) as { createdAt: string; reps: number; weight: number; isLeft: boolean }[];
+  ) as LogResult[];
 
   if (!results.length) return null;
 
-  const weeklyVolumes: WeeklyVolumes = {};
+  const weeklyVolumes = calculateWeeklyVolumes(results, exercise);
 
-  results.forEach(({ createdAt, reps, weight, isLeft }) => {
-    const weekStart = new Date(createdAt);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-    const weekKey = weekStart.toISOString().split('T')[0];
+  const weeksAndLabels = generateWeeksAndLabels();
 
-    if (!weeklyVolumes[weekKey]) {
-      weeklyVolumes[weekKey] = exercise.isOneArm ? { l_volume: 0, r_volume: 0 } : { volume: 0 };
-    }
+  if (weeksAndLabels === null) return null;
 
-    if (exercise.isOneArm) {
-      if (isLeft) {
-        weeklyVolumes[weekKey]!.l_volume! += reps * weight;
-      } else {
-        weeklyVolumes[weekKey]!.r_volume! += reps * weight;
-      }
-    } else {
-      weeklyVolumes[weekKey]!.volume! += reps * weight;
-    }
-  });
+  const datasets = createDatasets(weeklyVolumes, weeksAndLabels, exercise);
 
-  const weeks = Object.keys(weeklyVolumes).sort();
-  const lastValidWeek = weeks.length > 0 ? weeks[weeks.length - 1] : null; 
-
-  if (!lastValidWeek) return null;
-
-  const lastFiveWeeks: string[] = [];
-
-  const today = new Date();
-  const latestExpectedWeek = new Date(today);
-  latestExpectedWeek.setDate(today.getDate() - today.getDay() + 1);
-
-  for (let i = 4; i >= 0; i--) {
-    const week = new Date(latestExpectedWeek);
-    week.setDate(latestExpectedWeek.getDate() - i * 7);
-    lastFiveWeeks.push(week.toISOString().split('T')[0]);
-  }
-
-  const labels = lastFiveWeeks.map((week, index) => {
-    const referenceDate = week !== null ? new Date(week) : (lastFiveWeeks[index - 1] ? new Date(lastFiveWeeks[index - 1]!) : new Date());    
-    referenceDate.setDate(referenceDate.getDate() + 7); 
-  
-    const month = referenceDate.toLocaleString('en-US', { month: 'short' });
-    const year = referenceDate.getFullYear();
-  
-    const firstMonday = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
-    while (firstMonday.getDay() !== 1) {
-      firstMonday.setDate(firstMonday.getDate() + 1);
-    }
-  
-    const weekNumber = Math.ceil((referenceDate.getDate() - firstMonday.getDate() + 1) / 7) + 1;
-  
-    return `${month} W${weekNumber} ${year}`;
-  });
-
-  const datasets = exercise.isOneArm
-    ? [
-        {
-          data: lastFiveWeeks.map((week, index) => ({
-            label: labels[index],
-            value: weeklyVolumes[week]?.l_volume,
-            hideDataPoint: !(week in weeklyVolumes), 
-          })),
-          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
-            if (index > 0 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
-            }
-            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
-            }
-            return segments;
-          }, [] as { startIndex: number; endIndex: number; color: string }[])
-        },
-        {
-          data: lastFiveWeeks.map((week, index) => ({
-            label: labels[index],
-            value: weeklyVolumes[week]?.r_volume,
-            hideDataPoint: !(week in weeklyVolumes),
-          })),
-          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
-            if (index > 0 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
-            }
-            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
-            }
-            return segments;
-          }, [] as { startIndex: number; endIndex: number; color: string }[])
-        }
-      ]
-    : [
-        {
-          data: lastFiveWeeks.map((week, index) => ({
-            label: labels[index],
-            value: weeklyVolumes[week]?.volume, 
-            hideDataPoint: !(week in weeklyVolumes), 
-          })),
-          lineSegments: lastFiveWeeks.reduce((segments, week, index, arr) => {
-            if (index > 0 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index - 1, endIndex: index, color: 'transparent' });
-            }
-            if (index < arr.length - 1 && !(week in weeklyVolumes)) {
-              segments.push({ startIndex: index, endIndex: index + 1, color: 'transparent' });
-            }
-            return segments;
-          }, [] as { startIndex: number; endIndex: number; color: string }[])
-        }
-      ];
-
-  return { datasets };
+  return datasets;
 }
 
 export async function updateLogs(dayLog: DayLogIds): Promise<void> {
@@ -351,23 +254,4 @@ export async function destroyLogs(dayLog: DayLogIds): Promise<void> {
   });
 
   await Promise.all(deletePromises);
-}
-
-
-
-
-
-
-
-
-
-
-export async function debugGetAllLogs() {
-  const db = await getDatabase();
-
-  const results = await db.getAllAsync(
-    `SELECT * FROM log ORDER BY createdAt DESC;`
-  );
-
-  console.log('📋 Seeded Logs:', results);
 }

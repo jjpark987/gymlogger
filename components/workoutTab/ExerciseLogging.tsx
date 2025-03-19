@@ -2,12 +2,13 @@ import { StyleSheet } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { DayLogs, Exercise } from '@/database/types';
 
 interface ExerciseLoggingProps {
   selectedExercise: Exercise;
   dayLogs: DayLogs;
-  onRepsChange: (exerciseId: number, setIndex: number, text: string, isLeft: boolean | null) => void;
+  onRepsChange: (exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) => void;
   onBack: () => void;
 }
 
@@ -25,8 +26,8 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
                 key={`left-${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
-                value={dayLogs[selectedExercise.id]?.left[index]?.toString() || ''}
-                onChangeText={text => onRepsChange(selectedExercise.id, index, text, true)}
+                value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}              
+                onChangeText={value => onRepsChange(selectedExercise.id, index, value, true)}
                 style={styles.input}
               />
             ))}
@@ -37,8 +38,8 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
                 key={`right-${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
-                value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
-                onChangeText={text => onRepsChange(selectedExercise.id, index, text, false)}
+                value={dayLogs[selectedExercise.id]?.right[index] !== undefined ? String(dayLogs[selectedExercise.id]?.right[index]) : ''}              
+                onChangeText={value => onRepsChange(selectedExercise.id, index, value, false)}
                 style={styles.input}
               />
             ))}
@@ -51,8 +52,8 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
               key={`set-${index}`}
               placeholder={`Set ${index + 1}`}
               keyboardType='numeric'
-              value={dayLogs[selectedExercise.id]?.right[index]?.toString() || ''}
-              onChangeText={text => onRepsChange(selectedExercise.id, index, text, null)}
+              value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}              
+              onChangeText={value => onRepsChange(selectedExercise.id, index, value, null)}
               style={styles.input}
             />
           ))}

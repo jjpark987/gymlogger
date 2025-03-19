@@ -24,7 +24,7 @@ export interface Log {
   weight: number;
   setNum: number;
   isLeft: boolean | null;
-  reps: number;
+  reps: number | null;
   createdAt: string;
 }
 
@@ -39,8 +39,8 @@ export interface LoggedDay {
 }
 
 interface DayLog {
-  left: number[];
-  right: number[];
+  left: (string | number)[];
+  right: (string | number)[];
 }
 
 export type DayLogs = { [exerciseId: number]: DayLog };
@@ -50,6 +50,13 @@ export interface DayLogIds {
   right: { id: number | null; reps: number }[];
 }
 
+export interface LogResult {
+  createdAt: string;
+  reps: number;
+  weight: number;
+  isLeft: boolean;
+}
+
 interface WeeklyVolume {
   l_volume?: number;
   r_volume?: number;
@@ -57,6 +64,11 @@ interface WeeklyVolume {
 }
 
 export type WeeklyVolumes = Record<string, WeeklyVolume>;
+
+export interface WeeksAndLabels {
+  lastFiveWeeks: string[];
+  labels: string[];
+}
 
 export interface Progress {
   datasets: { 

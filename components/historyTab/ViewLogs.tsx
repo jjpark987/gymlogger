@@ -2,7 +2,8 @@ import { StyleSheet } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
-import { DayLogIds, Exercise, LoggedDay, LoggedWeek } from '@/database/types';
+
+import { DayLogIds, Exercise, } from '@/database/types';
 
 interface ViewLogsProps {
   exercise: Exercise;
@@ -119,15 +120,14 @@ const styles = StyleSheet.create({
     gap: 20,
     marginTop: 40
   },
+  buttonLabel: {
+    fontSize: 18
+  },
   button: {
     backgroundColor: '#1D6A47',
     paddingVertical: 5,
     borderRadius: 5,
-    marginBottom: 50,
     height: 50,
-  },
-  buttonLabel: {
-    fontSize: 18
   },
   backButton: {
     backgroundColor: '#4A2C1D',

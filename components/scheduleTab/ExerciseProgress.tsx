@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { Button, DataTable } from 'react-native-paper';
-import { CurveType, LineChart } from 'react-native-gifted-charts';
+import { LineChart } from 'react-native-gifted-charts';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { Exercise, Progress } from '@/database/types';
-import { Dimensions, StyleSheet } from 'react-native';
-import { useEffect, useMemo, useState } from 'react';
 
 interface ExerciseProgressProps {
   exercise: Exercise;
@@ -14,7 +15,6 @@ interface ExerciseProgressProps {
 
 export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgressProps) {
   const [yOffset, setYOffset] = useState(0);
-
   useEffect(() => {
     if (progress) {
       const yValues = progress.datasets
@@ -44,7 +44,7 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
       <ThemedView style={styles.contentContainer}>
         {progress ?
           <>
-            {exercise.isOneArm ?
+            {exercise.isOneArm && progress.datasets[1] ?
               <LineChart
                 data={processDatasets(progress).datasets[0].data}
                 lineSegments={progress.datasets[0].lineSegments}
@@ -120,21 +120,21 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
                 <DataTable.Title numeric textStyle={styles.tableText}>Volume</DataTable.Title>
               )}
             </DataTable.Header>
-            {progress.datasets[0].data.map((point, i) => (
+            {progress.datasets[0].data.slice().reverse().map((point, i, reversedArray) => (
               <DataTable.Row key={i}>
                 <DataTable.Cell textStyle={styles.tableText}>{point.label}</DataTable.Cell>
                 {exercise.isOneArm ? (
                   <>
                     <DataTable.Cell numeric textStyle={styles.tableText}>
-                      {progress.datasets[0].data[i]?.value ?? '-'}
+                      {reversedArray[i]?.value ?? '-'}
                     </DataTable.Cell>
                     <DataTable.Cell numeric textStyle={styles.tableText}>
-                      {progress.datasets[1]?.data[i]?.value ?? '-'}
+                      {progress.datasets[1]?.data.slice().reverse()[i]?.value ?? '-'}
                     </DataTable.Cell>
                   </>
                 ) : (
                   <DataTable.Cell numeric textStyle={styles.tableText}>
-                    {progress.datasets[0].data[i]?.value ?? '-'}
+                    {reversedArray[i]?.value ?? '-'}
                   </DataTable.Cell>
                 )}
               </DataTable.Row>
