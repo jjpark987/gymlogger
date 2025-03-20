@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { Day, Exercise } from '@/database/types';
 
 interface ExercisesOverviewProps {
@@ -15,12 +16,10 @@ interface ExercisesOverviewProps {
 export function ExercisesOverview({ day, exercises, onSelectExercise, onSelectSlot, onBack }: ExercisesOverviewProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{day.name}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedView style={styles.container}>
         {exercises.map((exercise, index) =>
-          exercise ? (
+          exercise ?
             <Button
               key={index}
               mode='contained'
@@ -30,7 +29,7 @@ export function ExercisesOverview({ day, exercises, onSelectExercise, onSelectSl
             >
               {exercise.name}
             </Button>
-          ) : (
+            :
             <Button
               key={index}
               mode='contained'
@@ -40,7 +39,6 @@ export function ExercisesOverview({ day, exercises, onSelectExercise, onSelectSl
             >
               +
             </Button>
-          )
         )}
         <Button
           mode='contained'
@@ -56,13 +54,12 @@ export function ExercisesOverview({ day, exercises, onSelectExercise, onSelectSl
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contentContainer: {
+  container: {
     gap: 30,
     marginTop: 20
+  },
+  buttonLabel: {
+    fontSize: 18
   },
   button: {
     backgroundColor: '#1D3D6C',
@@ -70,12 +67,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     height: 50,
   },
-  buttonLabel: {
-    fontSize: 18
-  },
   backButton: {
     backgroundColor: '#4A2C1D',
     paddingVertical: 5,
     borderRadius: 5,
-  },
+  }
 });

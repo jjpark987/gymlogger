@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
 
@@ -7,17 +7,25 @@ import { Day } from '@/database/types';
 export function RestDay({ day }: { day: Day }) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedView style={styles.container}>
+        <Image
+          source={require('../../assets/images/rest-day.png')}
+          style={styles.image}
+        />
       </ThemedView>
-      <ThemedText>REST DAY</ThemedText>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  container: {
+    alignItems: 'center'
+  },
+  image: {
+    resizeMode: 'contain',
+    width: 300,
+    height: 300,
+    marginTop: 50
   }
 });

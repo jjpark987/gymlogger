@@ -2,11 +2,12 @@ import { StyleSheet } from 'react-native';
 import { Button, Switch, TextInput } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
-import { NewExercise } from '@/database/types';
+
+import { InputExercise } from '@/database/types';
 
 interface AddExerciseProps {
-  newExercise: NewExercise;
-  setNewExercise: (exercise: NewExercise) => void;
+  newExercise: InputExercise;
+  setNewExercise: (exercise: InputExercise) => void;
   onSaveNewExercise: () => Promise<void>;
   onBack: () => void;
 }
@@ -14,23 +15,30 @@ interface AddExerciseProps {
 export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, onBack }: AddExerciseProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>Add Exercise</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedText type='title'>Add Exercise</ThemedText>
+      <ThemedView style={styles.container}>
         <TextInput
           placeholder='Name'
           value={newExercise.name}
           onChangeText={text => setNewExercise({ ...newExercise, name: text })}
           style={styles.input}
         />
-        <TextInput
-          placeholder='Weight'
-          keyboardType='numeric'
-          value={newExercise.weight.toString()}
-          onChangeText={text => setNewExercise({ ...newExercise, weight: text ? parseFloat(text) : 0 })}
-          style={styles.input}
-        />
+        <ThemedView style={styles.inputContainer}>
+          <TextInput
+            placeholder='Weight'
+            keyboardType='numeric'
+            value={newExercise.weight === '' ? '' : newExercise.weight.toString()}
+            onChangeText={text => setNewExercise({ ...newExercise, weight: text })}
+            style={[styles.input, styles.inputItem]}
+          />
+          <TextInput
+            placeholder='Increment'
+            keyboardType='numeric'
+            value={newExercise.increment === '' ? '' : newExercise.increment.toString()}
+            onChangeText={text => setNewExercise({ ...newExercise, increment: text })}
+            style={[styles.input, styles.inputItem]}
+          />
+        </ThemedView>
         <ThemedView>
           <ThemedText>Is One Arm?</ThemedText>
           <Switch
@@ -42,18 +50,18 @@ export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, on
         </ThemedView>
       </ThemedView>
       <ThemedView style={styles.buttonContainer}>
-        <Button 
-          mode='contained' 
-          onPress={onSaveNewExercise} 
-          style={styles.button} 
+        <Button
+          mode='contained'
+          onPress={onSaveNewExercise}
+          style={styles.button}
           labelStyle={styles.buttonLabel}
         >
           Save
         </Button>
-        <Button 
-          mode='contained' 
-          onPress={onBack} 
-          style={styles.backButton} 
+        <Button
+          mode='contained'
+          onPress={onBack}
+          style={styles.backButton}
           labelStyle={styles.buttonLabel}
         >
           Back
@@ -64,13 +72,15 @@ export function AddExercise({ newExercise, setNewExercise, onSaveNewExercise, on
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contentContainer: {
+  container: {
     gap: 20,
     marginTop: 20
+  },
+  inputContainer: {
+    flexDirection: 'row', gap: 10
+  },
+  inputItem: {
+    flex: 1
   },
   input: {
     backgroundColor: 'white',
@@ -86,14 +96,14 @@ const styles = StyleSheet.create({
     gap: 30,
     marginTop: 30
   },
+  buttonLabel: {
+    fontSize: 18
+  },
   button: {
     backgroundColor: '#1D3D6C',
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
-  },
-  buttonLabel: {
-    fontSize: 18
   },
   backButton: {
     backgroundColor: '#4A2C1D',

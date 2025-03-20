@@ -15,6 +15,7 @@ interface ExerciseProgressProps {
 
 export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgressProps) {
   const [yOffset, setYOffset] = useState(0);
+
   useEffect(() => {
     if (progress) {
       const yValues = progress.datasets
@@ -41,7 +42,7 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
 
   return (
     <>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedView style={styles.container}>
         {progress ?
           <>
             {exercise.isOneArm && progress.datasets[1] ?
@@ -95,9 +96,7 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
             }
           </>
           :
-          <>
-            <ThemedText>No data available</ThemedText>
-          </>
+          <ThemedText>No data available</ThemedText>
         }
         <Button
           mode='contained'
@@ -111,19 +110,19 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
           <DataTable style={styles.tableContainer}>
             <DataTable.Header>
               <DataTable.Title textStyle={styles.tableText}>Week</DataTable.Title>
-              {exercise.isOneArm ? (
+              {exercise.isOneArm ? 
                 <>
                   <DataTable.Title numeric textStyle={styles.tableText}>Left Volume</DataTable.Title>
                   <DataTable.Title numeric textStyle={styles.tableText}>Right Volume</DataTable.Title>
                 </>
-              ) : (
+               : 
                 <DataTable.Title numeric textStyle={styles.tableText}>Volume</DataTable.Title>
-              )}
+              }
             </DataTable.Header>
-            {progress.datasets[0].data.slice().reverse().map((point, i, reversedArray) => (
+            {progress.datasets[0].data.slice().reverse().map((point, i, reversedArray) => 
               <DataTable.Row key={i}>
                 <DataTable.Cell textStyle={styles.tableText}>{point.label}</DataTable.Cell>
-                {exercise.isOneArm ? (
+                {exercise.isOneArm ? 
                   <>
                     <DataTable.Cell numeric textStyle={styles.tableText}>
                       {reversedArray[i]?.value ?? '-'}
@@ -132,13 +131,13 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
                       {progress.datasets[1]?.data.slice().reverse()[i]?.value ?? '-'}
                     </DataTable.Cell>
                   </>
-                ) : (
+                 : 
                   <DataTable.Cell numeric textStyle={styles.tableText}>
                     {reversedArray[i]?.value ?? '-'}
                   </DataTable.Cell>
-                )}
+                }
               </DataTable.Row>
-            ))}
+            )}
           </DataTable>
         }
       </ThemedView>
@@ -147,7 +146,7 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: {
     gap: 50,
     marginVertical: 50
   },

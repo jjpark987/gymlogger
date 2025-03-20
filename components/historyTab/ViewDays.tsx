@@ -15,12 +15,10 @@ interface ViewDaysProps {
 export function ViewDays({ week, days, onSelectDay, onBack }: ViewDaysProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{week.display}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedText type='title'>{week.display}</ThemedText>
+      <ThemedView style={styles.container}>
         {days.map((day, index) =>
-          day ? (
+          day ?
             <Button
               key={index}
               mode='contained'
@@ -30,11 +28,10 @@ export function ViewDays({ week, days, onSelectDay, onBack }: ViewDaysProps) {
             >
               {day.display}
             </Button>
-          ) : (
+            :
             <ThemedView key={index} style={styles.placeholderButton}>
-              <ThemedText style={styles.placeholderText}>-</ThemedText>
+              <ThemedText style={styles.buttonLabel}>-</ThemedText>
             </ThemedView>
-          )
         )}
         <Button
           mode='contained'
@@ -50,11 +47,7 @@ export function ViewDays({ week, days, onSelectDay, onBack }: ViewDaysProps) {
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contentContainer: {
+  container: {
     gap: 20,
     marginTop: 20
   },
@@ -67,6 +60,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     height: 50,
   },
+  backButton: {
+    backgroundColor: '#4A2C1D',
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
   placeholderButton: {
     backgroundColor: '#1D6A47',
     paddingVertical: 10,
@@ -74,13 +72,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     height: 50,
-  },
-  placeholderText: {
-    fontSize: 18
-  },
-  backButton: {
-    backgroundColor: '#4A2C1D',
-    paddingVertical: 5,
-    borderRadius: 5,
-  },
+  }
 });

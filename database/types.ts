@@ -9,13 +9,15 @@ export interface Exercise {
   name: string;
   isOneArm: boolean;
   weight: number;
+  increment: number;
   orderNum: number;
 }
 
-export interface NewExercise {
+export interface InputExercise {
   name: string;
   isOneArm: boolean;
-  weight: number;
+  weight: string;
+  increment: string;
 }
 
 export interface Log {

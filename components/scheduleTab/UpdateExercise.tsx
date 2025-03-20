@@ -1,34 +1,43 @@
-import { Button, Switch, TextInput } from 'react-native-paper';
+import { Button, TextInput } from 'react-native-paper';
 import { StyleSheet } from 'react-native';
 import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
-import { Exercise } from '@/database/types';
+
+import { InputExercise } from '@/database/types';
 
 interface UpdateExerciseProps {
-  exercise: Exercise;
-  setExercise: (exercise: Exercise) => void;
+  updatedExercise: InputExercise;
+  setUpdatedExercise: (exercise: InputExercise) => void;
   onBack: () => void;
   onSaveExercise: () => Promise<void>;
-  onDeleteExercise: (exercise: Exercise) => Promise<void>;
+  onDeleteExercise: () => Promise<void>;
 }
 
-export function UpdateExercise({ exercise, setExercise, onBack, onSaveExercise, onDeleteExercise }: UpdateExerciseProps) {
+export function UpdateExercise({ updatedExercise, setUpdatedExercise, onBack, onSaveExercise, onDeleteExercise }: UpdateExerciseProps) {
   return (
     <>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedView style={styles.container}>
         <TextInput
           placeholder='Name'
-          value={exercise.name}
-          onChangeText={text => setExercise({ ...exercise, name: text })}
+          value={updatedExercise.name}
+          onChangeText={text => setUpdatedExercise({ ...updatedExercise, name: text })}
           style={styles.input}
         />
-        <TextInput
-          placeholder='Weight'
-          keyboardType='numeric'
-          value={exercise.weight.toString()}
-          onChangeText={text => setExercise({ ...exercise, weight: parseFloat(text) || 0 })}
-          style={styles.input}
-        />
+        <ThemedView style={styles.inputContainer}>
+          <TextInput
+            placeholder='Weight'
+            keyboardType='numeric'
+            value={updatedExercise.weight.toString()}
+            onChangeText={text => setUpdatedExercise({ ...updatedExercise, weight: text })}
+            style={[styles.input, styles.inputItem]}
+          />
+          <TextInput
+            placeholder='Increment'
+            keyboardType='numeric'
+            value={updatedExercise.increment.toString()}
+            onChangeText={text => setUpdatedExercise({ ...updatedExercise, increment: text })}
+            style={[styles.input, styles.inputItem]}
+          />
+        </ThemedView>
       </ThemedView>
       <ThemedView style={styles.buttonContainer}>
         <Button
@@ -49,7 +58,7 @@ export function UpdateExercise({ exercise, setExercise, onBack, onSaveExercise, 
         </Button>
         <Button
           mode='contained'
-          onPress={() => onDeleteExercise(exercise)}
+          onPress={() => onDeleteExercise()}
           style={styles.delButton}
           labelStyle={styles.buttonLabel}
         >
@@ -61,9 +70,15 @@ export function UpdateExercise({ exercise, setExercise, onBack, onSaveExercise, 
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: {
     gap: 20,
     marginTop: 20
+  },
+  inputContainer: {
+    flexDirection: 'row', gap: 10
+  },
+  inputItem: {
+    flex: 1
   },
   input: {
     backgroundColor: 'white',

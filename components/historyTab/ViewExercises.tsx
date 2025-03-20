@@ -16,12 +16,10 @@ interface ViewExercisesProps {
 export function ViewExercises({ week, day, exercises, onSelectExercise, onBack }: ViewExercisesProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{week.display} {day.display.slice(0, 3)}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
+      <ThemedText type='title'>{week.display} {day.display.slice(0, 3)}</ThemedText>
+      <ThemedView style={styles.container}>
         {exercises.map((exercise, index) =>
-          exercise ? (
+          exercise ?
             <Button
               key={index}
               mode='contained'
@@ -31,11 +29,10 @@ export function ViewExercises({ week, day, exercises, onSelectExercise, onBack }
             >
               {exercise.name}
             </Button>
-          ) : (
+            :
             <ThemedView key={index} style={styles.placeholderButton}>
-              <ThemedText style={styles.placeholderText}>-</ThemedText>
+              <ThemedText style={styles.buttonLabel}>-</ThemedText>
             </ThemedView>
-          )
         )}
         <Button
           mode='contained'
@@ -51,13 +48,12 @@ export function ViewExercises({ week, day, exercises, onSelectExercise, onBack }
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contentContainer: {
+  container: {
     gap: 20,
     marginTop: 20
+  },
+  buttonLabel: {
+    fontSize: 18
   },
   button: {
     backgroundColor: '#1D6A47',
@@ -65,8 +61,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     height: 50,
   },
-  buttonLabel: {
-    fontSize: 18
+  backButton: {
+    backgroundColor: '#4A2C1D',
+    paddingVertical: 5,
+    borderRadius: 5,
   },
   placeholderButton: {
     backgroundColor: '#1D6A47',
@@ -75,13 +73,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     height: 50,
-  },
-  placeholderText: {
-    fontSize: 18
-  },
-  backButton: {
-    backgroundColor: '#4A2C1D',
-    paddingVertical: 5,
-    borderRadius: 5,
-  },
+  }
 });

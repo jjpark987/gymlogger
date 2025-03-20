@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { ThemedView } from '../ThemedView';
 import { ThemedText } from '../ThemedText';
+
 import { Day } from '@/database/types';
 
 interface ScheduleOverviewProps {
@@ -12,11 +13,9 @@ interface ScheduleOverviewProps {
 export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>Schedule</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
-        {days.map(day => (
+      <ThemedText type='title'>Schedule</ThemedText>
+      <ThemedView style={styles.container}>
+        {days.map(day =>
           <Button
             key={day.id}
             mode='contained'
@@ -26,28 +25,24 @@ export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
           >
             {day.name}
           </Button>
-        ))}
+        )}
       </ThemedView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contentContainer: {
+  container: {
     gap: 30,
     marginTop: 20
+  },
+  buttonLabel: {
+    fontSize: 18
   },
   button: {
     backgroundColor: '#1D3D6C',
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
-  },
-  buttonLabel: {
-    fontSize: 18
-  },
+  }
 });

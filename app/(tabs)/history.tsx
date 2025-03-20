@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useFocusEffect } from '@react-navigation/native';
+
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-
 import { DayLogIds, Exercise, LoggedDay, LoggedWeek } from '@/database/types';
 import { destroyLogs, getLoggedDaysByWeek, getLoggedExercisesByDate, getLoggedWeeks, getLogsByExercise, updateLogs } from '@/database/log';
 import { ViewWeeks } from '@/components/historyTab/ViewWeeks';
@@ -39,7 +39,7 @@ export default function History() {
     const fetchedDays = await getLoggedDaysByWeek(week.startDate);
     setDays(fetchedDays);
   }
-  
+
   async function viewExercises(day: LoggedDay) {
     setSelectedDay(day);
     const fetchedExercises = await getLoggedExercisesByDate(day.date);
@@ -54,16 +54,16 @@ export default function History() {
 
   function onRepsChange(index: number, text: string, isLeft: boolean | null) {
     if (!dayLog) return;
-  
-    const updatedLog = { 
-      left: dayLog.left.map((log, i) => 
+
+    const updatedLog = {
+      left: dayLog.left.map((log, i) =>
         i === index && isLeft === true ? { ...log, reps: text ? parseInt(text, 10) || 0 : 0 } : log
       ),
-      right: dayLog.right.map((log, i) => 
+      right: dayLog.right.map((log, i) =>
         i === index && isLeft !== true ? { ...log, reps: text ? parseInt(text, 10) || 0 : 0 } : log
       ),
     };
-  
+
     setDayLog(updatedLog);
   }
 
@@ -77,15 +77,15 @@ export default function History() {
   async function deleteLog(dayLog: DayLogIds | null) {
     if (!dayLog) return;
     if (!selectedDay) return;
-  
+
     Alert.alert(
       'Confirm Deletion',
       `Are you sure you want to delete this log?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
+        {
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             await destroyLogs(dayLog);
             setSelectedExercise(null);
@@ -99,40 +99,38 @@ export default function History() {
   return (
     <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D6A47' }} headerImage={<IconSymbol size={300} name='clock.badge.questionmark' color='white' style={styles.background} />}>
       <KeyboardAwareScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
-        {selectedWeek ? (
-          selectedDay ? (
-            selectedExercise ? (
+        {selectedWeek ?
+          selectedDay ?
+            selectedExercise ?
               <ViewLogs
-                exercise={selectedExercise} 
+                exercise={selectedExercise}
                 dayLog={dayLog}
                 onRepsChange={onRepsChange}
                 onSaveLog={saveLog}
                 onBack={() => setSelectedExercise(null)}
                 onDeleteLog={deleteLog}
               />
-            ) : (
-              <ViewExercises 
+              :
+              <ViewExercises
                 week={selectedWeek}
-                day={selectedDay} 
+                day={selectedDay}
                 exercises={exercises}
-                onSelectExercise={viewLogs} 
+                onSelectExercise={viewLogs}
                 onBack={() => setSelectedDay(null)}
               />
-            )
-          ) : (
-            <ViewDays 
+            :
+            <ViewDays
               week={selectedWeek}
               days={days}
               onSelectDay={viewExercises}
               onBack={() => setSelectedWeek(null)}
             />
-          )
-        ) : (
-          <ViewWeeks 
-            weeks={weeks} 
-            onSelectWeek={viewDays} 
+          :
+          <ViewWeeks
+            weeks={weeks}
+            onSelectWeek={viewDays}
           />
-        )}
+        }
       </KeyboardAwareScrollView>
     </ParallaxScrollView>
   );

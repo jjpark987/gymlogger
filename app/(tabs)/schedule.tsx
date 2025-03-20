@@ -2,29 +2,31 @@ import { useCallback, useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useFocusEffect } from '@react-navigation/native';
+
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-
 import { getDays } from '@/database/day';
-import { Day, Exercise, NewExercise, Progress } from '@/database/types';
+import { Day, Exercise, InputExercise, Progress } from '@/database/types';
 import { destroyExercise, getExercisesByDay, insertExercise, updateExercise } from '@/database/exercise';
+import { getExerciseProgress } from '@/database/log';
 import { ScheduleOverview } from '@/components/scheduleTab/ScheduleOverview';
 import { ExercisesOverview } from '@/components/scheduleTab/ExercisesOverview';
 import { AddExercise } from '@/components/scheduleTab/AddExercise';
 import { ExerciseDetail } from '@/components/scheduleTab/ExerciseDetail';
-import { getExerciseProgress } from '@/database/log';
 
 export default function Schedule() {
   const [days, setDays] = useState<Day[]>([]);
   const [selectedDay, setSelectedDay] = useState<Day | null>(null);
   const [dayExercises, setDayExercises] = useState<(Exercise | null)[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-  const [newExercise, setNewExercise] = useState<NewExercise>({
+  const [newExercise, setNewExercise] = useState<InputExercise>({
     name: '',
     isOneArm: false,
-    weight: 0,
+    weight: '',
+    increment: ''
   });
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [updatedExercise, setUpdatedExercise] = useState<InputExercise | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
 
   useFocusEffect(
@@ -35,7 +37,14 @@ export default function Schedule() {
       }
       fetchDays();
       setProgress(null);
+      setUpdatedExercise(null);
       setSelectedExercise(null);
+      setNewExercise({
+        name: '',
+        isOneArm: false,
+        weight: '',
+        increment: ''
+      });
       setSelectedSlot(null);
       setSelectedDay(null);
     }, [])
@@ -49,6 +58,12 @@ export default function Schedule() {
 
   async function viewExerciseDetails(exercise: Exercise) {
     setSelectedExercise(exercise);
+    setUpdatedExercise({
+      name: exercise.name,
+      isOneArm: exercise.isOneArm,
+      weight: exercise.weight.toString(),
+      increment: exercise.increment.toString()
+    });
     const progressData = await getExerciseProgress(exercise);
     setProgress(progressData);
   }
@@ -57,11 +72,20 @@ export default function Schedule() {
     if (!selectedDay) return;
     if (!selectedSlot) return;
 
-    await insertExercise(selectedDay.id, newExercise.name, newExercise.isOneArm, newExercise.weight, selectedSlot);
+    if (newExercise.name === '' || newExercise.weight === '' || newExercise.increment === '') {
+      Alert.alert(
+        'Missing Fields',
+        'Enter name, weight, and increment.',
+        [{ text: 'Cancel', style: 'cancel' }]
+      );
+    }
+
+    await insertExercise(selectedDay.id, newExercise.name, newExercise.isOneArm, parseFloat(newExercise.weight), parseFloat(newExercise.increment), selectedSlot);
     setNewExercise({
       name: '',
       isOneArm: false,
-      weight: 0,
+      weight: '',
+      increment: '',
     });
     setSelectedSlot(null);
     setProgress(null);
@@ -69,10 +93,20 @@ export default function Schedule() {
   }
 
   async function saveExercise() {
+    if (!updatedExercise) return;
     if (!selectedExercise) return;
     if (!selectedDay) return;
 
-    await updateExercise(selectedExercise.id, selectedExercise);
+    const exercise: Exercise = {
+      ...updatedExercise,
+      id: selectedExercise.id,
+      dayId: selectedExercise.dayId,
+      weight: parseFloat(updatedExercise?.weight),
+      increment: parseFloat(updatedExercise?.increment),
+      orderNum: selectedExercise.orderNum
+    }
+
+    await updateExercise(selectedExercise.id, exercise);
     setSelectedExercise(null);
     await viewExercises(selectedDay.id);
   }
@@ -101,40 +135,43 @@ export default function Schedule() {
   return (
     <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D6C' }} headerImage={<IconSymbol size={300} name='list.clipboard' color='white' style={styles.background} />}>
       <KeyboardAwareScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
-        {selectedExercise ? (
-          <ExerciseDetail
-            exercise={selectedExercise}
-            setExercise={setSelectedExercise}
-            progress={progress}
-            setProgress={setProgress}
-            onSaveExercise={saveExercise}
-            onBack={() => {
-              setSelectedExercise(null);
-              setProgress(null);
-            }}            
-            onDeleteExercise={() => deleteExercise(selectedExercise)}
-          />
-        ) : selectedSlot ? (
-          <AddExercise
-            newExercise={newExercise}
-            setNewExercise={setNewExercise}
-            onSaveNewExercise={saveNewExercise}
-            onBack={() => setSelectedSlot(null)}
-          />
-        ) : selectedDay ? (
-          <ExercisesOverview
-            day={selectedDay}
-            exercises={dayExercises}
-            onSelectExercise={viewExerciseDetails}
-            onSelectSlot={setSelectedSlot}
-            onBack={() => setSelectedDay(null)}
-          />
-        ) : (
+        {selectedDay ?
+          selectedSlot ?
+            <AddExercise
+              newExercise={newExercise}
+              setNewExercise={setNewExercise}
+              onSaveNewExercise={saveNewExercise}
+              onBack={() => setSelectedSlot(null)}
+            />
+            : selectedExercise ?
+              <ExerciseDetail
+                exercise={selectedExercise}
+                updatedExercise={updatedExercise}
+                setUpdatedExercise={setUpdatedExercise}
+                progress={progress}
+                setProgress={setProgress}
+                onSaveExercise={saveExercise}
+                onBack={() => {
+                  setSelectedExercise(null);
+                  setUpdatedExercise(null);
+                  setProgress(null);
+                }}
+                onDeleteExercise={() => deleteExercise(selectedExercise)}
+              />
+              :
+              <ExercisesOverview
+                day={selectedDay}
+                exercises={dayExercises}
+                onSelectExercise={viewExerciseDetails}
+                onSelectSlot={setSelectedSlot}
+                onBack={() => setSelectedDay(null)}
+              />
+          :
           <ScheduleOverview
             days={days}
             onSelectDay={viewExercises}
           />
-        )}
+        }
       </KeyboardAwareScrollView>
     </ParallaxScrollView>
   );

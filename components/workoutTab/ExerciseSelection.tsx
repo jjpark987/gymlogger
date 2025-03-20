@@ -9,17 +9,14 @@ interface ExerciseSelectionProps {
   day: Day;
   exercises: (Exercise | null)[];
   onSelectExercise: (exercise: Exercise | null) => void;
-  onSaveLogs: () => Promise<void>;
 }
 
-export function ExerciseSelection({ day, exercises, onSelectExercise, onSaveLogs }: ExerciseSelectionProps) {
+export function ExerciseSelection({ day, exercises, onSelectExercise }: ExerciseSelectionProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{day.name}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.contentContainer}>
-        {exercises.map((exercise, index) => (
+      <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedView style={styles.container}>
+        {exercises.map((exercise, index) =>
           <Button
             key={index}
             mode='contained'
@@ -29,26 +26,14 @@ export function ExerciseSelection({ day, exercises, onSelectExercise, onSaveLogs
           >
             {exercise ? exercise.name : '-'}
           </Button>
-        ))}
-        <Button
-          mode='contained'
-          onPress={onSaveLogs}
-          style={styles.saveButton}
-          labelStyle={styles.buttonLabel}
-        >
-          Save
-        </Button>
+        )}
       </ThemedView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8
-  },
-  contentContainer: {
+  container: {
     gap: 40,
     marginTop: 20
   },
@@ -58,11 +43,6 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#1D3D47',
     paddingVertical: 10,
-    borderRadius: 5
-  },
-  saveButton: {
-    backgroundColor: '#1D3D47',
-    paddingVertical: 5,
     borderRadius: 5
   }
 });

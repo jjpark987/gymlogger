@@ -10,6 +10,7 @@ export async function setupExerciseTable() {
       name TEXT NOT NULL,
       isOneArm INTEGER NOT NULL CHECK (isOneArm IN (0, 1)),
       weight REAL NOT NULL DEFAULT 0,
+      increment REAL NOT NULL DEFAULT 0,      
       orderNum INTEGER NOT NULL CHECK (orderNum BETWEEN 1 AND 4),
       
       FOREIGN KEY (dayId) REFERENCES day(id) ON DELETE CASCADE
@@ -17,11 +18,11 @@ export async function setupExerciseTable() {
   `);
 }
 
-export async function insertExercise(dayId: number, name: string, isOneArm: boolean, weight: number, orderNum: number): Promise<void> {
+export async function insertExercise(dayId: number, name: string, isOneArm: boolean, weight: number, increment: number, orderNum: number): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    `INSERT INTO exercise (dayId, name, isOneArm, weight, orderNum) VALUES (?, ?, ?, ?, ?)`,
-    [dayId, name, isOneArm ? 1 : 0, weight, orderNum]
+    `INSERT INTO exercise (dayId, name, isOneArm, weight, increment, orderNum) VALUES (?, ?, ?, ?, ?, ?)`,
+    [dayId, name, isOneArm ? 1 : 0, weight, increment, orderNum]
   );
 }
 

@@ -6,62 +6,64 @@ import { ThemedText } from '../ThemedText';
 import { DayLogs, Exercise } from '@/database/types';
 
 interface ExerciseLoggingProps {
-  selectedExercise: Exercise;
+  selectedExercise: Exercise | null;
   dayLogs: DayLogs;
   onRepsChange: (exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) => void;
   onBack: () => void;
 }
 
 export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBack }: ExerciseLoggingProps) {
+  if (!selectedExercise) return;
   return (
     <>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type='title'>{selectedExercise.name}</ThemedText>
+        <ThemedText>{selectedExercise.weight} lbs</ThemedText>
       </ThemedView>
-      {selectedExercise.isOneArm ? (
+      {selectedExercise.isOneArm ?
         <ThemedView style={styles.oneArmLogger}>
           <ThemedView style={styles.oneArmLoggerCol}>
-            {Array.from({ length: 4 }, (_, index) => (
+            {Array.from({ length: 4 }, (_, index) =>
               <TextInput
                 key={`left-${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
-                value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}              
+                value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}
                 onChangeText={value => onRepsChange(selectedExercise.id, index, value, true)}
                 style={styles.input}
               />
-            ))}
+            )}
           </ThemedView>
           <ThemedView style={styles.oneArmLoggerCol}>
-            {Array.from({ length: 4 }, (_, index) => (
+            {Array.from({ length: 4 }, (_, index) =>
               <TextInput
                 key={`right-${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
-                value={dayLogs[selectedExercise.id]?.right[index] !== undefined ? String(dayLogs[selectedExercise.id]?.right[index]) : ''}              
+                value={dayLogs[selectedExercise.id]?.right[index] !== undefined ? String(dayLogs[selectedExercise.id]?.right[index]) : ''}
                 onChangeText={value => onRepsChange(selectedExercise.id, index, value, false)}
                 style={styles.input}
               />
-            ))}
+            )}
           </ThemedView>
         </ThemedView>
-      ) : (
+        :
         <ThemedView style={styles.twoArmLogger}>
-          {Array.from({ length: 4 }, (_, index) => (
+          {Array.from({ length: 4 }, (_, index) =>
             <TextInput
               key={`set-${index}`}
               placeholder={`Set ${index + 1}`}
               keyboardType='numeric'
-              value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}              
+              value={dayLogs[selectedExercise.id]?.left[index] !== undefined ? String(dayLogs[selectedExercise.id]?.left[index]) : ''}
               onChangeText={value => onRepsChange(selectedExercise.id, index, value, null)}
               style={styles.input}
             />
-          ))}
+          )}
         </ThemedView>
-      )}
-      <Button 
+      }
+      <Button
         mode='contained'
-        onPress={onBack} 
+        onPress={onBack}
         style={styles.backButton}
         labelStyle={styles.buttonLabel}
       >
@@ -73,12 +75,11 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+    gap: 8
   },
   oneArmLogger: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     marginTop: 20
   },
   oneArmLoggerCol: {
@@ -94,13 +95,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     fontSize: 18,
   },
+  buttonLabel: {
+    fontSize: 18
+  },
   backButton: {
     backgroundColor: '#4A2C1D',
     paddingVertical: 5,
     borderRadius: 5,
-    marginTop: 40
-  },
-  buttonLabel: {
-    fontSize: 18
-  },
+    marginTop: 30
+  }
 });

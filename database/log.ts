@@ -1,6 +1,6 @@
 import { getDatabase } from './database';
-import { calculateWeeklyVolumes, createDatasets, generateWeeksAndLabels } from './exerciseProgressUtils';
-import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, LogResult, Progress, WeeklyVolumes } from './types';
+import { calculateWeeklyVolumes, convertToLocalTime, createDatasets, generateWeeksAndLabels } from './logUtils';
+import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, LogResult, Progress } from './types';
 
 export async function setupLogTable() {
   const db = await getDatabase();
@@ -19,49 +19,64 @@ export async function setupLogTable() {
   `);
 }
 
-export async function insertDayLogs(dayLogs: DayLogs, exercises: (Exercise | null)[]) {
+export async function insertDayLogs(dayLogs: DayLogs): Promise<void> {
   const db = await getDatabase();
 
   const insertQuery = `
     INSERT INTO log (exerciseId, weight, setNum, isLeft, reps, createdAt)
-    VALUES (?, ?, ?, ?, ?, datetime('now'))
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  const currentDate = new Date().toISOString();
+  const utcString = new Date().toISOString();
 
   const insertPromises = [];
 
   for (const exerciseId in dayLogs) {
     const log = dayLogs[exerciseId];
-    const exercise = exercises.find(e => e && e.id === Number(exerciseId));
-  
-    if (!exercise) {
-      console.warn(`Exercise with ID ${exerciseId} not found. Skipping.`);
-      continue;
+    const exercise: Exercise | null = await db.getFirstAsync(
+      `SELECT * FROM exercise WHERE id = ?`,
+      [Number(exerciseId)]
+    );
+
+    if (!exercise) continue;
+
+    if (log.left.some(set => set === '') || log.right.some(set => set === '')) continue;
+
+    const allSets = exercise.isOneArm
+      ? [...log.left, ...log.right]
+      : log.right;
+
+    if (allSets.every(set => set === 10)) {
+      const newWeight = exercise.weight + exercise.increment;
+
+      await db.runAsync(
+        `UPDATE exercise SET weight = ? WHERE id = ?`,
+        [newWeight, exerciseId]
+      );
     }
-  
+
     for (let i = 0; i < 4; i++) {
       if (exercise.isOneArm) {
         if (log.left[i] !== undefined) {
           insertPromises.push(
-            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, true, log.left[i] === '' ? null : log.left[i], currentDate])
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, true, log.left[i] === '' ? null : log.left[i], utcString])
           );
         }
         if (log.right[i] !== undefined) {
           insertPromises.push(
-            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, false, log.right[i] === '' ? null : log.right[i], currentDate])
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, false, log.right[i] === '' ? null : log.right[i], utcString])
           );
         }
       } else {
         if (log.right[i] !== undefined) {
           insertPromises.push(
-            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, null, log.right[i] === '' ? null : log.right[i], currentDate ])
+            db.runAsync(insertQuery, [exerciseId, exercise.weight, i + 1, null, log.right[i] === '' ? null : log.right[i], utcString])
           );
         }
       }
     }
-  }  
-  
+  }
+
   await Promise.all(insertPromises);
 }
 
@@ -69,27 +84,42 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT DISTINCT strftime('%Y-%m-%d', date(createdAt, 'weekday 1')) AS weekStartDate
-    FROM log
-    ORDER BY weekStartDate DESC`
-  ) as { weekStartDate: string }[];
+    `SELECT createdAt, reps, weight, isLeft, exerciseId FROM log ORDER BY createdAt DESC;`
+  ) as LogResult[];
 
   if (!results.length) return null;
 
-  const loggedWeeks: LoggedWeek[] = results.map(week => {
-    const weekStartDate = new Date(week.weekStartDate);
+  const loggedWeeks: LoggedWeek[] = [];
 
-    const dayOfMonth = weekStartDate.getDate();
-    const firstDateOfMonth = new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), 1);
-    const firstDayWeekDay = firstDateOfMonth.getDay() || 7; 
+  const validResults = results.filter(({ reps, weight }) => reps !== null && weight !== null);
 
-    const weekNumber = Math.ceil((dayOfMonth + firstDayWeekDay - 1) / 7);
-    const monthAbbrev = weekStartDate.toLocaleString('en-US', { month: 'short' });
-    
-    return {
-      display: `${monthAbbrev} W${weekNumber} ${weekStartDate.getFullYear()}`,
-      startDate: week.weekStartDate
-    };
+  validResults.forEach(({ createdAt }) => {
+    const utcDate = new Date(createdAt);
+    const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+    console.log(localDate)
+    const dayOfWeek = localDate.getDay();
+    console.log(dayOfWeek)
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    // console.log(diffToMonday)
+    const weekStart = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
+    weekStart.setUTCDate(weekStart.getUTCDate() + diffToMonday);
+    // console.log(weekStart)
+    const weekKey = weekStart.toISOString().split('T')[0];
+
+    if (!loggedWeeks.some(week => week.startDate === weekKey)) {
+      const monthAbbrev = weekStart.toLocaleString('en-US', { month: 'short' });
+      const year = weekStart.getFullYear();
+
+      const dayOfMonth = weekStart.getDate();
+      const firstDateOfMonth = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
+      const firstDayWeekDay = firstDateOfMonth.getDay() || 7;
+      const weekNumber = Math.ceil((dayOfMonth + firstDayWeekDay - 1) / 7);
+
+      loggedWeeks.push({
+        display: `${monthAbbrev} W${weekNumber} ${year}`,
+        startDate: weekKey
+      });
+    }
   });
 
   return loggedWeeks;
@@ -109,14 +139,14 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
   const daysArray: (LoggedDay | null)[] = [null, null, null, null, null];
 
   results.forEach(day => {
-    const loggedDate = new Date(day.loggedDate);
+    const loggedDate = new Date(convertToLocalTime(day.loggedDate));
     const dayOfWeek = loggedDate.getUTCDay();
 
     const index = dayOfWeek - 1;
 
     if (index >= 0 && index <= 4) {
       daysArray[index] = {
-        display: loggedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }),        
+        display: loggedDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }),
         date: day.loggedDate
       };
     }
@@ -130,10 +160,10 @@ export async function getLoggedExercisesByDate(date: string): Promise<(Exercise 
 
   const results = await db.getAllAsync(
     `SELECT DISTINCT e.*
-     FROM log l
-     JOIN exercise e ON l.exerciseId = e.id
-     WHERE date(l.createdAt) = date(?)
-     ORDER BY e.orderNum ASC;`,
+    FROM log l
+    JOIN exercise e ON l.exerciseId = e.id
+    WHERE date(datetime(l.createdAt, 'localtime')) = date(?)
+    ORDER BY e.orderNum ASC;`,
     [date]
   ) as Exercise[];
 
@@ -153,9 +183,9 @@ export async function getLogsByExercise(date: string, exercise: Exercise): Promi
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT id, setNum, isLeft, reps FROM log 
-     WHERE exerciseId = ? AND date(createdAt) = date(?)
-     ORDER BY setNum ASC;`,
+    `SELECT id, setNum, isLeft, reps, datetime(createdAt, 'localtime') as createdAt FROM log 
+    WHERE exerciseId = ? AND date(datetime(createdAt, 'localtime')) = date(?)
+    ORDER BY setNum ASC;`,
     [exercise.id, date]
   ) as { id: number; setNum: number; isLeft: boolean | null; reps: number }[];
 
@@ -185,10 +215,9 @@ export async function getExerciseProgress(exercise: Exercise): Promise<Progress 
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT createdAt, reps, weight, isLeft FROM log
-     WHERE exerciseId = ? 
-       AND strftime('%w', createdAt) BETWEEN '1' AND '5'
-     ORDER BY createdAt ASC;`,
+    `SELECT datetime(createdAt, 'localtime') as createdAt, reps, weight, isLeft FROM log
+    WHERE exerciseId = ? AND strftime('%w', createdAt) BETWEEN '1' AND '5'
+    ORDER BY createdAt ASC;`,
     [exercise.id]
   ) as LogResult[];
 

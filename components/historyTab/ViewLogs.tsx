@@ -17,15 +17,13 @@ interface ViewLogsProps {
 export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, onDeleteLog }: ViewLogsProps) {
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{exercise.name}</ThemedText>
-      </ThemedView>
+      <ThemedText type='title'>{exercise.name}</ThemedText>
       {dayLog && (
-        exercise.isOneArm ? (
+        exercise.isOneArm ?
           <ThemedView style={styles.oneArmLogger}>
             <ThemedView style={styles.oneArmLoggerCol}>
-              {dayLog.left.map((_, index) => (
-                <TextInput 
+              {dayLog.left.map((_, index) =>
+                <TextInput
                   key={`l${index}`}
                   placeholder={`Set ${index + 1}`}
                   keyboardType='numeric'
@@ -33,11 +31,11 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
                   onChangeText={text => onRepsChange(index, text, true)}
                   style={styles.input}
                 />
-              ))}
+              )}
             </ThemedView>
             <ThemedView style={styles.oneArmLoggerCol}>
-              {dayLog.right.map((_, index) => (
-                <TextInput 
+              {dayLog.right.map((_, index) =>
+                <TextInput
                   key={`r${index}`}
                   placeholder={`Set ${index + 1}`}
                   keyboardType='numeric'
@@ -45,13 +43,13 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
                   onChangeText={text => onRepsChange(index, text, false)}
                   style={styles.input}
                 />
-              ))}
+              )}
             </ThemedView>
           </ThemedView>
-        ) : (
+          :
           <ThemedView style={styles.twoArmLogger}>
-            {dayLog.right.map((_, index) => (
-              <TextInput 
+            {dayLog.right.map((_, index) =>
+              <TextInput
                 key={`set${index}`}
                 placeholder={`Set ${index + 1}`}
                 keyboardType='numeric'
@@ -59,20 +57,19 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
                 onChangeText={text => onRepsChange(index, text, null)}
                 style={styles.input}
               />
-            ))}
+            )}
           </ThemedView>
-        )
       )}
       <ThemedView style={styles.buttonContainer}>
-      <Button 
+        <Button
           mode='contained'
-          onPress={onBack} 
+          onPress={onBack}
           style={styles.backButton}
           labelStyle={styles.buttonLabel}
         >
           Back
         </Button>
-        <Button 
+        <Button
           mode='contained'
           onPress={() => onSaveLog(dayLog)}
           style={styles.button}
@@ -80,7 +77,7 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
         >
           Save
         </Button>
-        <Button 
+        <Button
           mode='contained'
           onPress={() => onDeleteLog(dayLog)}
           style={styles.delButton}
@@ -94,13 +91,9 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   oneArmLogger: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     marginTop: 20
   },
   oneArmLoggerCol: {
