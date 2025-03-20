@@ -104,10 +104,15 @@ export default function Workout() {
               mode='contained'
               onPress={() => saveLogState()}
               style={{
-                backgroundColor: '#1D3D47',
+                backgroundColor: 'white',
                 paddingVertical: 5,
                 borderRadius: 5,
-                marginVertical: 100
+                marginVertical: 50
+              }}
+              labelStyle={{
+                color: 'black',
+                fontWeight: 'bold',
+                fontSize: 20
               }}
             >
               Save

@@ -39,14 +39,21 @@ export function ExerciseDetail({ exercise, updatedExercise, setUpdatedExercise, 
   return (
     <>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{exercise.name}</ThemedText>
+        <ThemedText 
+          type='title'
+          style={styles.titleText}
+          numberOfLines={1} 
+          adjustsFontSizeToFit 
+        >
+          {exercise.name}
+        </ThemedText>
         <Switch
           value={viewExercise}
           onValueChange={() => setViewExercise(!viewExercise)}
           trackColor={{ true: '#1D3D6C' }}
         />
       </ThemedView>
-      {viewExercise ? 
+      {viewExercise ? (
         <UpdateExercise
           updatedExercise={updatedExercise ?? {
             name: '',
@@ -62,7 +69,7 @@ export function ExerciseDetail({ exercise, updatedExercise, setUpdatedExercise, 
           onSaveExercise={onSaveExercise}
           onDeleteExercise={onDeleteExercise}
         />
-       : 
+      ) : (
         <ExerciseProgress
           exercise={exercise}
           progress={progress}
@@ -71,7 +78,7 @@ export function ExerciseDetail({ exercise, updatedExercise, setUpdatedExercise, 
             onBack();
           }}
         />
-      }
+      )}
     </>
   );
 }
@@ -82,5 +89,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-  }
+    width: '100%'
+  },
+  titleText: {
+    flexShrink: 1
+  },
 });

@@ -34,7 +34,7 @@ export function ExerciseSelection({ day, exercises, onSelectExercise }: Exercise
 
 const styles = StyleSheet.create({
   container: {
-    gap: 40,
+    gap: 50,
     marginTop: 20
   },
   buttonLabel: {

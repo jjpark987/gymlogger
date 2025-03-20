@@ -86,7 +86,7 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const results = await db.getAllAsync(
     `SELECT createdAt, reps, weight, isLeft, exerciseId FROM log ORDER BY createdAt DESC;`
   ) as LogResult[];
-console.log(results)
+
   if (!results.length) return null;
 
   const loggedWeeks: LoggedWeek[] = [];
@@ -105,7 +105,6 @@ console.log(results)
 
     if (!loggedWeeks.some(week => week.startDate === weekKey)) {
       const monthAbbrev = weekStart.toLocaleString('en-US', { month: 'short' });
-      console.log(weekStart, monthAbbrev)
       const year = weekStart.getFullYear();
 
       const dayOfMonth = weekStart.getDate();

@@ -141,7 +141,15 @@ export default function Schedule() {
               newExercise={newExercise}
               setNewExercise={setNewExercise}
               onSaveNewExercise={saveNewExercise}
-              onBack={() => setSelectedSlot(null)}
+              onBack={() => {
+                setSelectedSlot(null);
+                setNewExercise({
+                  name: '',
+                  isOneArm: false,
+                  weight: '',
+                  increment: '',
+                });
+              }}
             />
             : selectedExercise ?
               <ExerciseDetail

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "gymlogger",
+    "name": "GymLogger",
     "slug": "gymlogger",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,6 +36,20 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "60e569b2-925a-435e-80fb-1ce5b0ac10b6"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/60e569b2-925a-435e-80fb-1ce5b0ac10b6"
     }
   }
 }

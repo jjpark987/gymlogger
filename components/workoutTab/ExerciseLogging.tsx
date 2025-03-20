@@ -17,8 +17,17 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
   return (
     <>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>{selectedExercise.name}</ThemedText>
-        <ThemedText>{selectedExercise.weight} lbs</ThemedText>
+        <ThemedText 
+          type='title' 
+          style={styles.titleText}
+          numberOfLines={1} 
+          adjustsFontSizeToFit 
+        >
+          {selectedExercise.name}
+        </ThemedText>
+        <ThemedText style={styles.weightText}>
+          {selectedExercise.weight} lbs
+        </ThemedText>
       </ThemedView>
       {selectedExercise.isOneArm ?
         <ThemedView style={styles.oneArmLogger}>
@@ -75,7 +84,16 @@ export function ExerciseLogging({ selectedExercise, dayLogs, onRepsChange, onBac
 
 const styles = StyleSheet.create({
   titleContainer: {
-    gap: 8
+    flexDirection: 'column',
+    width: '100%'
+  },
+  titleText: {
+    flexShrink: 1
+  },
+  weightText: {
+    marginTop: 5, 
+    fontSize: 18, 
+    color: 'gray'
   },
   oneArmLogger: {
     flexDirection: 'row',
