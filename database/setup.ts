@@ -15,7 +15,7 @@ export async function setupDatabase() {
 
     // await debugSeedDatabase();
     // await debugGetAllExercises();
-    await debugGetAllLogs();
+    // await debugGetAllLogs();
     // await debugGetAllLogsByExercise(3);
 
     console.log('✅ SQLite database initialized');

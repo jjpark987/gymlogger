@@ -6,14 +6,13 @@ export function calculateWeeklyVolumes(results: LogResult[], exercise: Exercise)
   const validResults = results.filter(({ reps, weight }) => reps !== null && weight !== null) as { createdAt: string; reps: number; weight: number; isLeft: boolean }[];
 
   validResults.forEach(({ createdAt, reps, weight, isLeft }) => {
-    const date = new Date(createdAt);
-    const dayOfWeek = date.getDay();
+    const utcDate = new Date(createdAt);
 
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const dayOfWeek = utcDate.getDay();
+    const dayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
-    const weekStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    weekStart.setUTCDate(weekStart.getUTCDate() + diffToMonday);
-
+    const weekStart = new Date(utcDate);
+    weekStart.setDate(utcDate.getDate() + dayOffset);
     const weekKey = weekStart.toISOString().split('T')[0];
 
     if (!weeklyVolumes[weekKey]) {

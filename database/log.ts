@@ -1,5 +1,5 @@
 import { getDatabase } from './database';
-import { calculateWeeklyVolumes, convertToLocalTime, createDatasets, generateWeeksAndLabels } from './logUtils';
+import { calculateWeeklyVolumes, createDatasets, generateWeeksAndLabels } from './logUtils';
 import { DayLogIds, DayLogs, Exercise, LoggedDay, LoggedWeek, LogResult, Progress } from './types';
 
 export async function setupLogTable() {
@@ -86,7 +86,7 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const results = await db.getAllAsync(
     `SELECT createdAt, reps, weight, isLeft, exerciseId FROM log ORDER BY createdAt DESC;`
   ) as LogResult[];
-
+console.log(results)
   if (!results.length) return null;
 
   const loggedWeeks: LoggedWeek[] = [];
@@ -95,25 +95,29 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
 
   validResults.forEach(({ createdAt }) => {
     const utcDate = new Date(createdAt);
-    const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
-    console.log(localDate)
-    const dayOfWeek = localDate.getDay();
-    console.log(dayOfWeek)
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    // console.log(diffToMonday)
-    const weekStart = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
-    weekStart.setUTCDate(weekStart.getUTCDate() + diffToMonday);
-    // console.log(weekStart)
+
+    const dayOfWeek = utcDate.getDay();
+    const dayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    const weekStart = new Date(utcDate);
+    weekStart.setDate(utcDate.getDate() + dayOffset);
     const weekKey = weekStart.toISOString().split('T')[0];
 
     if (!loggedWeeks.some(week => week.startDate === weekKey)) {
       const monthAbbrev = weekStart.toLocaleString('en-US', { month: 'short' });
+      console.log(weekStart, monthAbbrev)
       const year = weekStart.getFullYear();
 
       const dayOfMonth = weekStart.getDate();
       const firstDateOfMonth = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
-      const firstDayWeekDay = firstDateOfMonth.getDay() || 7;
-      const weekNumber = Math.ceil((dayOfMonth + firstDayWeekDay - 1) / 7);
+
+      const firstMonday = new Date(firstDateOfMonth);
+      const firstWeekday = firstDateOfMonth.getDay();
+      const offsetToMonday = firstWeekday === 0 ? 1 : (firstWeekday === 1 ? 0 : 8 - firstWeekday);
+      firstMonday.setDate(firstDateOfMonth.getDate() + offsetToMonday);
+      
+      const daysSinceFirstMonday = dayOfMonth - firstMonday.getDate();
+      const weekNumber = daysSinceFirstMonday >= 0 ? Math.floor(daysSinceFirstMonday / 7) + 1 : 1;
 
       loggedWeeks.push({
         display: `${monthAbbrev} W${weekNumber} ${year}`,
@@ -139,7 +143,7 @@ export async function getLoggedDaysByWeek(startDate: string): Promise<(LoggedDay
   const daysArray: (LoggedDay | null)[] = [null, null, null, null, null];
 
   results.forEach(day => {
-    const loggedDate = new Date(convertToLocalTime(day.loggedDate));
+    const loggedDate = new Date(day.loggedDate);
     const dayOfWeek = loggedDate.getUTCDay();
 
     const index = dayOfWeek - 1;
@@ -162,7 +166,7 @@ export async function getLoggedExercisesByDate(date: string): Promise<(Exercise 
     `SELECT DISTINCT e.*
     FROM log l
     JOIN exercise e ON l.exerciseId = e.id
-    WHERE date(datetime(l.createdAt, 'localtime')) = date(?)
+    WHERE DATE(l.createdAt) = ?
     ORDER BY e.orderNum ASC;`,
     [date]
   ) as Exercise[];
