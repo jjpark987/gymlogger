@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
+import { Button } from 'react-native-paper';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -13,13 +15,13 @@ import { insertDayLogs } from '@/database/log';
 import { ExerciseSelection } from '@/components/workoutTab/ExerciseSelection';
 import { ExerciseLogging } from '@/components/workoutTab/ExerciseLogging';
 import { RestDay } from '@/components/workoutTab/RestDay';
-import { Button } from 'react-native-paper';
 
 export default function Workout() {
   const { dayOfWeek } = useDay();
   const [exercises, setExercises] = useState<(Exercise | null)[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [dayLogs, setDayLogs] = useState<DayLogs | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -75,6 +77,9 @@ export default function Workout() {
     await insertDayLogs(dayLogs);
     await AsyncStorage.removeItem('dayLog');
     setDayLogs(null);
+    
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 5000);
   }
 
   return (
@@ -120,6 +125,12 @@ export default function Workout() {
           </KeyboardAwareScrollView>
         </ParallaxScrollView>
       }
+      {showConfetti && (
+        <ConfettiCannon
+          count={100}
+          origin={{ x: -10, y: 0 }}
+        />
+      )}
     </>
   );
 }
