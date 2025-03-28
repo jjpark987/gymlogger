@@ -1,6 +1,6 @@
 # GymLogger
 
-This repository contains the frontend for GymLogger.
+This repository contains the frontend for GymLogger. Please read this [Dev article](https://dev.to/jjpark987/building-a-gym-logging-app-3c9c) for more details. 
 
 ## Geting Started
 
