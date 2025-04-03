@@ -14,20 +14,6 @@ interface ExerciseProgressProps {
 }
 
 export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgressProps) {
-  const [yOffset, setYOffset] = useState(0);
-
-  useEffect(() => {
-    if (progress) {
-      const yValues = progress.datasets
-        .flatMap(dataset => dataset.data.map(point => point.value))
-        .filter(v => v !== undefined && v !== null);
-
-      if (yValues.length > 0) {
-        setYOffset(Math.min(...yValues) * 0.98);
-      }
-    }
-  }, [progress]);
-
   function processDatasets(progress: Progress): Progress {
     return {
       datasets: progress.datasets.map(dataset => ({
@@ -66,7 +52,6 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
                 yAxisColor='white'
                 yAxisTextStyle={{ color: 'white' }}
                 yAxisLabelContainerStyle={{ marginRight: 10 }}
-                yAxisOffset={yOffset}
                 showFractionalValues={true}
                 roundToDigits={0}
                 noOfSections={5}
@@ -88,7 +73,6 @@ export function ExerciseProgress({ exercise, progress, onBack }: ExerciseProgres
                 yAxisColor='white'
                 yAxisTextStyle={{ color: 'white' }}
                 yAxisLabelContainerStyle={{ marginRight: 10 }}
-                yAxisOffset={yOffset}
                 showFractionalValues={true}
                 roundToDigits={0}
                 noOfSections={5}
