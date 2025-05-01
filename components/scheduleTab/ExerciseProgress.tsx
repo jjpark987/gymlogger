@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Button, DataTable } from 'react-native-paper';
 import { LineChart } from 'react-native-gifted-charts';

@@ -17,7 +17,19 @@ interface ViewLogsProps {
 export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, onDeleteLog }: ViewLogsProps) {
   return (
     <>
-      <ThemedText type='title'>{exercise.name}</ThemedText>
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText 
+          type='title' 
+          style={styles.titleText}
+          numberOfLines={1} 
+          adjustsFontSizeToFit
+        >
+          {exercise.name}
+        </ThemedText>
+        <ThemedText style={styles.weightText}>
+          {dayLog?.weight} lbs
+        </ThemedText>
+      </ThemedView>
       {dayLog && (
         exercise.isOneArm ?
           <ThemedView style={styles.oneArmLogger}>
@@ -91,6 +103,18 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
 }
 
 const styles = StyleSheet.create({
+  titleContainer: {
+    flexDirection: 'column',
+    width: '100%'
+  },
+  titleText: {
+    flexShrink: 1
+  },
+  weightText: {
+    marginTop: 5, 
+    fontSize: 18, 
+    color: 'gray'
+  },
   oneArmLogger: {
     flexDirection: 'row',
     justifyContent: 'space-between',

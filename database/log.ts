@@ -186,15 +186,16 @@ export async function getLogsByExercise(date: string, exercise: Exercise): Promi
   const db = await getDatabase();
 
   const results = await db.getAllAsync(
-    `SELECT id, setNum, isLeft, reps, datetime(createdAt, 'localtime') as createdAt FROM log 
+    `SELECT id, setNum, isLeft, reps, weight, datetime(createdAt, 'localtime') as createdAt FROM log 
     WHERE exerciseId = ? AND date(datetime(createdAt, 'localtime')) = date(?)
     ORDER BY setNum ASC;`,
     [exercise.id, date]
-  ) as { id: number; setNum: number; isLeft: boolean | null; reps: number }[];
+  ) as { id: number; setNum: number; isLeft: boolean | null; reps: number; weight: number }[];
 
   const dayLog = {
     left: exercise.isOneArm ? Array(4).fill({ id: null, reps: 0 }) : [],
-    right: Array(4).fill({ id: null, reps: 0 })
+    right: Array(4).fill({ id: null, reps: 0 }),
+    weight: results[0]?.weight
   };
 
   results.forEach(log => {

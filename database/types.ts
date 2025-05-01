@@ -50,6 +50,7 @@ export type DayLogs = { [exerciseId: number]: DayLog };
 export interface DayLogIds {
   left: { id: number | null; reps: number }[];
   right: { id: number | null; reps: number }[];
+  weight: number;
 }
 
 export interface LogResult {
