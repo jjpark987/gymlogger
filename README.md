@@ -7,7 +7,6 @@ This repository contains the frontend for GymLogger. Please read this [Dev artic
 ### Prerequisites
 
 - Node.js
-- npm
 - Expo go
 - EAS CLI
 - SQLite

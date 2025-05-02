@@ -173,6 +173,10 @@ export default function Schedule() {
                 onSelectExercise={viewExerciseDetails}
                 onSelectSlot={setSelectedSlot}
                 onBack={() => setSelectedDay(null)}
+                onRefresh={async () => {
+                  const updated = await getExercisesByDay(selectedDay.id);
+                  setDayExercises(updated);
+                }}
               />
           :
           <ScheduleOverview
