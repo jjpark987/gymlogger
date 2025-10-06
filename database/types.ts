@@ -74,16 +74,16 @@ export interface WeeksAndLabels {
 }
 
 export interface Progress {
-  datasets: { 
-    data: { 
-      label: string; 
-      value: number | undefined; 
-      hideDataPoint: boolean; 
-    }[]; 
-    lineSegments: { 
-      startIndex: number; 
-      endIndex: number; 
-      color: string; 
-    }[]; 
+  datasets: {
+    data: {
+      label: string;
+      value: number | undefined;
+      hideDataPoint: boolean;
+    }[];
+    lineSegments: {
+      startIndex: number;
+      endIndex: number;
+      color: string;
+    }[];
   }[];
 }

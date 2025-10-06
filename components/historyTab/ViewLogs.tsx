@@ -1,80 +1,85 @@
-import { StyleSheet } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
-import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
+import { StyleSheet } from "react-native";
+import { Button, TextInput } from "react-native-paper";
+import { ThemedView } from "../ThemedView";
+import { ThemedText } from "../ThemedText";
 
-import { DayLogIds, Exercise, } from '@/database/types';
+import { DayLogIds, Exercise } from "@/database/types";
 
 interface ViewLogsProps {
   exercise: Exercise;
   dayLog: DayLogIds | null;
-  onRepsChange: (index: number, text: string, isLeft: (boolean | null)) => void;
+  onRepsChange: (index: number, text: string, isLeft: boolean | null) => void;
   onSaveLog: (updatedDayLog: DayLogIds | null) => Promise<void>;
   onBack: () => void;
   onDeleteLog: (dayLog: DayLogIds | null) => Promise<void>;
 }
 
-export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, onDeleteLog }: ViewLogsProps) {
+export function ViewLogs({
+  exercise,
+  dayLog,
+  onRepsChange,
+  onSaveLog,
+  onBack,
+  onDeleteLog,
+}: ViewLogsProps) {
   return (
     <>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText 
-          type='title' 
+        <ThemedText
+          type="title"
           style={styles.titleText}
-          numberOfLines={1} 
+          numberOfLines={1}
           adjustsFontSizeToFit
         >
           {exercise.name}
         </ThemedText>
-        <ThemedText style={styles.weightText}>
-          {dayLog?.weight} lbs
-        </ThemedText>
+        <ThemedText style={styles.weightText}>{dayLog?.weight} lbs</ThemedText>
       </ThemedView>
-      {dayLog && (
-        exercise.isOneArm ?
+      {dayLog &&
+        (exercise.isOneArm ? (
           <ThemedView style={styles.oneArmLogger}>
             <ThemedView style={styles.oneArmLoggerCol}>
-              {dayLog.left.map((_, index) =>
+              {dayLog.left.map((_, index) => (
                 <TextInput
                   key={`l${index}`}
                   placeholder={`Set ${index + 1}`}
-                  keyboardType='numeric'
+                  keyboardType="numeric"
                   value={dayLog.left[index].reps?.toString()}
-                  onChangeText={text => onRepsChange(index, text, true)}
+                  onChangeText={(text) => onRepsChange(index, text, true)}
                   style={styles.input}
                 />
-              )}
+              ))}
             </ThemedView>
             <ThemedView style={styles.oneArmLoggerCol}>
-              {dayLog.right.map((_, index) =>
+              {dayLog.right.map((_, index) => (
                 <TextInput
                   key={`r${index}`}
                   placeholder={`Set ${index + 1}`}
-                  keyboardType='numeric'
+                  keyboardType="numeric"
                   value={dayLog.right[index].reps?.toString()}
-                  onChangeText={text => onRepsChange(index, text, false)}
+                  onChangeText={(text) => onRepsChange(index, text, false)}
                   style={styles.input}
                 />
-              )}
+              ))}
             </ThemedView>
           </ThemedView>
-          :
+        ) : (
           <ThemedView style={styles.twoArmLogger}>
-            {dayLog.right.map((_, index) =>
+            {dayLog.right.map((_, index) => (
               <TextInput
                 key={`set${index}`}
                 placeholder={`Set ${index + 1}`}
-                keyboardType='numeric'
+                keyboardType="numeric"
                 value={dayLog.right[index].reps?.toString()}
-                onChangeText={text => onRepsChange(index, text, null)}
+                onChangeText={(text) => onRepsChange(index, text, null)}
                 style={styles.input}
               />
-            )}
+            ))}
           </ThemedView>
-      )}
+        ))}
       <ThemedView style={styles.buttonContainer}>
         <Button
-          mode='contained'
+          mode="contained"
           onPress={onBack}
           style={styles.backButton}
           labelStyle={styles.buttonLabel}
@@ -82,7 +87,7 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
           Back
         </Button>
         <Button
-          mode='contained'
+          mode="contained"
           onPress={() => onSaveLog(dayLog)}
           style={styles.button}
           labelStyle={styles.buttonLabel}
@@ -90,7 +95,7 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
           Save
         </Button>
         <Button
-          mode='contained'
+          mode="contained"
           onPress={() => onDeleteLog(dayLog)}
           style={styles.delButton}
           labelStyle={styles.buttonLabel}
@@ -104,57 +109,57 @@ export function ViewLogs({ exercise, dayLog, onRepsChange, onSaveLog, onBack, on
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'column',
-    width: '100%'
+    flexDirection: "column",
+    width: "100%",
   },
   titleText: {
-    flexShrink: 1
+    flexShrink: 1,
   },
   weightText: {
-    marginTop: 5, 
-    fontSize: 18, 
-    color: 'gray'
+    marginTop: 5,
+    fontSize: 18,
+    color: "gray",
   },
   oneArmLogger: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
   },
   oneArmLoggerCol: {
-    width: '48%',
-    gap: 20
+    width: "48%",
+    gap: 20,
   },
   twoArmLogger: {
     gap: 20,
-    marginTop: 20
+    marginTop: 20,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 5,
     fontSize: 18,
   },
   buttonContainer: {
     gap: 20,
-    marginTop: 40
+    marginTop: 40,
   },
   buttonLabel: {
-    fontSize: 18
+    fontSize: 18,
   },
   button: {
-    backgroundColor: '#1D6A47',
+    backgroundColor: "#1D6A47",
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
   },
   backButton: {
-    backgroundColor: '#4A2C1D',
+    backgroundColor: "#4A2C1D",
     paddingVertical: 5,
     borderRadius: 5,
     marginBottom: 50,
     height: 50,
   },
   delButton: {
-    backgroundColor: '#6C1D1D',
+    backgroundColor: "#6C1D1D",
     paddingVertical: 5,
     borderRadius: 5,
     marginBottom: 50,

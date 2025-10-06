@@ -1,11 +1,11 @@
-import { useRef, useState, useEffect } from 'react';
-import { Animated, Easing, StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
-import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
+import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
 
-import { Day, Exercise } from '@/database/types';
-import { updateExercise } from '@/database/exercise';
+import { updateExercise } from "@/database/exercise";
+import { Day, Exercise } from "@/database/types";
 
 interface ExercisesOverviewProps {
   day: Day;
@@ -50,38 +50,38 @@ export function ExercisesOverview({
             easing: Easing.linear,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     } else {
       shakeAnim.stopAnimation();
       shakeAnim.setValue(0);
       setSelectedForSwap(null);
     }
-  }, [reorderMode]);
+  }, [reorderMode, shakeAnim]);
 
   return (
     <>
-      <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedText type="title">{day.name}</ThemedText>
       <ThemedView style={styles.container}>
         {exercises.map((exercise, index) => {
           const animatedStyle = reorderMode
             ? {
-              transform: [
-                {
-                  rotate: shakeAnim.interpolate({
-                    inputRange: [-1, 1],
-                    outputRange: ['-1deg', '1deg'],
-                  }),
-                },
-              ],
-            }
+                transform: [
+                  {
+                    rotate: shakeAnim.interpolate({
+                      inputRange: [-1, 1],
+                      outputRange: ["-1deg", "1deg"],
+                    }),
+                  },
+                ],
+              }
             : {};
 
           return (
             <Animated.View key={index} style={animatedStyle}>
               {exercise ? (
                 <Button
-                  mode='contained'
+                  mode="contained"
                   onPress={async () => {
                     if (!reorderMode) return onSelectExercise(exercise);
 
@@ -94,8 +94,12 @@ export function ExercisesOverview({
                       }
 
                       const tempOrder = selectedForSwap.orderNum;
-                      await updateExercise(selectedForSwap.id, { orderNum: exercise.orderNum });
-                      await updateExercise(exercise.id, { orderNum: tempOrder });
+                      await updateExercise(selectedForSwap.id, {
+                        orderNum: exercise.orderNum,
+                      });
+                      await updateExercise(exercise.id, {
+                        orderNum: tempOrder,
+                      });
 
                       await onRefresh();
                       setSelectedForSwap(null);
@@ -106,7 +110,7 @@ export function ExercisesOverview({
                   style={[
                     styles.button,
                     selectedForSwap?.id === exercise.id && reorderMode
-                      ? { backgroundColor: '#FF7F50' }
+                      ? { backgroundColor: "#FF7F50" }
                       : {},
                   ]}
                   labelStyle={styles.buttonLabel}
@@ -115,7 +119,7 @@ export function ExercisesOverview({
                 </Button>
               ) : (
                 <Button
-                  mode='contained'
+                  mode="contained"
                   onPress={() => onSelectSlot(index + 1)}
                   onLongPress={() => setReorderMode(true)}
                   style={styles.button}
@@ -128,7 +132,7 @@ export function ExercisesOverview({
           );
         })}
         <Button
-          mode='contained'
+          mode="contained"
           onPress={onBack}
           style={styles.backButton}
           labelStyle={styles.buttonLabel}
@@ -149,13 +153,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   button: {
-    backgroundColor: '#1D3D6C',
+    backgroundColor: "#1D3D6C",
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
   },
   backButton: {
-    backgroundColor: '#4A2C1D',
+    backgroundColor: "#4A2C1D",
     paddingVertical: 5,
     borderRadius: 5,
   },

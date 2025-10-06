@@ -1,5 +1,5 @@
-import { getDatabase } from './database';
-import { Exercise } from './types';
+import { getDatabase } from "./database";
+import { Exercise } from "./types";
 
 export async function setupExerciseTable() {
   const db = await getDatabase();
@@ -18,39 +18,53 @@ export async function setupExerciseTable() {
   `);
 }
 
-export async function insertExercise(dayId: number, name: string, isOneArm: boolean, weight: number, increment: number, orderNum: number): Promise<void> {
+export async function insertExercise(
+  dayId: number,
+  name: string,
+  isOneArm: boolean,
+  weight: number,
+  increment: number,
+  orderNum: number,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
     `INSERT INTO exercise (dayId, name, isOneArm, weight, increment, orderNum) VALUES (?, ?, ?, ?, ?, ?)`,
-    [dayId, name, isOneArm ? 1 : 0, weight, increment, orderNum]
+    [dayId, name, isOneArm ? 1 : 0, weight, increment, orderNum],
   );
 }
 
-export async function getExercisesByDay(dayId: number): Promise<(Exercise | null)[]> {
+export async function getExercisesByDay(
+  dayId: number,
+): Promise<(Exercise | null)[]> {
   const db = await getDatabase();
-  const exercises = await db.getAllAsync(
+  const exercises = (await db.getAllAsync(
     `SELECT * FROM exercise WHERE dayId = ? ORDER BY orderNum ASC`,
-    [dayId]
-  ) as Exercise[];
+    [dayId],
+  )) as Exercise[];
   const orderedExercises: (Exercise | null)[] = [null, null, null, null];
-  exercises.forEach(exercise => {
+  exercises.forEach((exercise) => {
     orderedExercises[exercise.orderNum - 1] = exercise;
   });
   return orderedExercises;
 }
 
-export async function updateExercise(id: number, updates: Partial<Exercise>): Promise<void> {
+export async function updateExercise(
+  id: number,
+  updates: Partial<Exercise>,
+): Promise<void> {
   const db = await getDatabase();
-  const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+  const fields = Object.keys(updates)
+    .map((key) => `${key} = ?`)
+    .join(", ");
   const values = Object.values(updates);
   if (fields.length === 0) return;
-  await db.runAsync(`UPDATE exercise SET ${fields} WHERE id = ?`, [...values, id]);
+  await db.runAsync(`UPDATE exercise SET ${fields} WHERE id = ?`, [
+    ...values,
+    id,
+  ]);
 }
 
 export async function destroyExercise(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync(
-    'DELETE FROM exercise WHERE id = ?', 
-    [id]
-  );
+  await db.runAsync("DELETE FROM exercise WHERE id = ?", [id]);
 }

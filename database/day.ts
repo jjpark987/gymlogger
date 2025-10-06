@@ -1,5 +1,5 @@
-import { getDatabase } from './database';
-import { Day } from './types';
+import { getDatabase } from "./database";
+import { Day } from "./types";
 
 export async function setupDayTable() {
   const db = await getDatabase();
@@ -15,11 +15,11 @@ export async function insertDay(name: string): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
     `INSERT INTO day (name) VALUES (?) ON CONFLICT(name) DO NOTHING;`,
-    [name]
+    [name],
   );
 }
 
 export async function getDays(): Promise<Day[]> {
   const db = await getDatabase();
-  return await db.getAllAsync('SELECT * FROM day;') as Day[];
+  return (await db.getAllAsync("SELECT * FROM day;")) as Day[];
 }

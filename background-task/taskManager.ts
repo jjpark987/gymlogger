@@ -35,8 +35,8 @@
 
 //     // await insertDayLogs(dayLog);
 //     // await AsyncStorage.removeItem('dayLog');
-    
-//     logEntry += `✅ Saved ${JSON.stringify(dayLog)} on day ${now.getDate()}\n`;    
+
+//     logEntry += `✅ Saved ${JSON.stringify(dayLog)} on day ${now.getDate()}\n`;
 //     await appendLog(logEntry);
 
 //     return BackgroundFetch.BackgroundFetchResult.NewData;
@@ -58,7 +58,7 @@
 
 //   try {
 //     await BackgroundFetch.registerTaskAsync(TASK_NAME, {
-//       // minimumInterval: 60 * 60, 
+//       // minimumInterval: 60 * 60,
 //       minimumInterval: 30,
 //       stopOnTerminate: false,
 //       startOnBoot: true

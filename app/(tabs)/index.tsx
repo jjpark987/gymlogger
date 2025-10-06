@@ -1,25 +1,27 @@
-import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import ConfettiCannon from 'react-native-confetti-cannon';
-import { useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
+import { StyleSheet } from "react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Button } from "react-native-paper";
 
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useDay } from '@/context/DayContext';
-import { DayLogs, Exercise } from '@/database/types';
-import { getExercisesByDay } from '@/database/exercise';
-import { insertDayLogs } from '@/database/log';
-import { ExerciseSelection } from '@/components/workoutTab/ExerciseSelection';
-import { ExerciseLogging } from '@/components/workoutTab/ExerciseLogging';
-import { RestDay } from '@/components/workoutTab/RestDay';
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { ExerciseLogging } from "@/components/workoutTab/ExerciseLogging";
+import { ExerciseSelection } from "@/components/workoutTab/ExerciseSelection";
+import { RestDay } from "@/components/workoutTab/RestDay";
+import { useDay } from "@/context/DayContext";
+import { getExercisesByDay } from "@/database/exercise";
+import { insertDayLogs } from "@/database/log";
+import { DayLogs, Exercise } from "@/database/types";
 
 export default function Workout() {
-  const { dayOfWeek } = useDay();
+  const { dayOfWeek, isDateRest } = useDay();
   const [exercises, setExercises] = useState<(Exercise | null)[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
   const [dayLogs, setDayLogs] = useState<DayLogs | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -30,7 +32,7 @@ export default function Workout() {
         setExercises(fetchedExercises);
       }
       async function loadDayLogs() {
-        const storedLogs = await AsyncStorage.getItem('dayLog');
+        const storedLogs = await AsyncStorage.getItem("dayLog");
         if (storedLogs) {
           setDayLogs(JSON.parse(storedLogs));
         }
@@ -38,18 +40,26 @@ export default function Workout() {
       fetchExercises();
       loadDayLogs();
       setSelectedExercise(null);
-    }, [dayOfWeek.id])
+    }, [dayOfWeek.id]),
   );
 
-  function onRepsChange(exerciseId: number, setIndex: number, value: string, isLeft: boolean | null) {
-    setDayLogs(prevLogs => {
+  function onRepsChange(
+    exerciseId: number,
+    setIndex: number,
+    value: string,
+    isLeft: boolean | null,
+  ) {
+    setDayLogs((prevLogs) => {
       const updatedLogs = { ...prevLogs };
 
       if (!updatedLogs[exerciseId]) {
-        updatedLogs[exerciseId] = { left: ['', '', '', ''], right: ['', '', '', ''] };
+        updatedLogs[exerciseId] = {
+          left: ["", "", "", ""],
+          right: ["", "", "", ""],
+        };
       }
 
-      const newReps = value === '' ? '' : Number(value);
+      const newReps = value === "" ? "" : Number(value);
 
       if (isLeft === null) {
         updatedLogs[exerciseId].left = [...updatedLogs[exerciseId].left];
@@ -65,7 +75,7 @@ export default function Workout() {
         updatedLogs[exerciseId].right[setIndex] = newReps;
       }
 
-      AsyncStorage.setItem('dayLog', JSON.stringify(updatedLogs));
+      AsyncStorage.setItem("dayLog", JSON.stringify(updatedLogs));
 
       return updatedLogs;
     });
@@ -75,71 +85,89 @@ export default function Workout() {
     if (!dayLogs) return;
 
     await insertDayLogs(dayLogs);
-    await AsyncStorage.removeItem('dayLog');
+    await AsyncStorage.removeItem("dayLog");
     setDayLogs(null);
-    
+
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 5000);
   }
 
   return (
     <>
-      {dayOfWeek.id === 5 || dayOfWeek.id === 6 ?
-        <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<IconSymbol size={300} name='bed.double' color='white' style={styles.backgroundBed} />}>
+      {isDateRest(new Date()) ? (
+        <ParallaxScrollView
+          headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+          headerImage={
+            <IconSymbol
+              size={300}
+              name="bed.double"
+              color="white"
+              style={styles.backgroundBed}
+            />
+          }
+        >
           <RestDay day={dayOfWeek} />
         </ParallaxScrollView>
-        :
-        <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<IconSymbol size={300} name='figure.strengthtraining.traditional' color='white' style={styles.background} />}>
-          <KeyboardAwareScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
-            {selectedExercise ?
+      ) : (
+        <ParallaxScrollView
+          headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+          headerImage={
+            <IconSymbol
+              size={300}
+              name="figure.strengthtraining.traditional"
+              color="white"
+              style={styles.background}
+            />
+          }
+        >
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            {selectedExercise ? (
               <ExerciseLogging
                 selectedExercise={selectedExercise}
                 dayLogs={dayLogs ?? {}}
                 onRepsChange={onRepsChange}
                 onBack={() => setSelectedExercise(null)}
               />
-              :
+            ) : (
               <ExerciseSelection
                 day={dayOfWeek}
                 exercises={exercises}
                 onSelectExercise={setSelectedExercise}
               />
-            }
-            <Button 
-              mode='contained'
+            )}
+            <Button
+              mode="contained"
               onPress={() => saveLogState()}
               style={{
-                backgroundColor: 'white',
+                backgroundColor: "white",
                 paddingVertical: 5,
                 borderRadius: 5,
-                marginVertical: 50
+                marginVertical: 50,
               }}
               labelStyle={{
-                color: 'black',
-                fontWeight: 'bold',
-                fontSize: 20
+                color: "black",
+                fontWeight: "bold",
+                fontSize: 20,
               }}
             >
               Save
             </Button>
           </KeyboardAwareScrollView>
         </ParallaxScrollView>
-      }
-      {showConfetti && (
-        <ConfettiCannon
-          count={100}
-          origin={{ x: -10, y: 0 }}
-        />
       )}
+      {showConfetti && <ConfettiCannon count={100} origin={{ x: -10, y: 0 }} />}
     </>
   );
 }
 
 const styles = StyleSheet.create({
   background: {
-    marginTop: 30
+    marginTop: 30,
   },
   backgroundBed: {
-    marginTop: 20
-  }
+    marginTop: 20,
+  },
 });

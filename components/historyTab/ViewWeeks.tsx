@@ -1,9 +1,9 @@
-import { StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
-import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
+import { StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
+import { ThemedView } from "../ThemedView";
+import { ThemedText } from "../ThemedText";
 
-import { LoggedWeek } from '@/database/types';
+import { LoggedWeek } from "@/database/types";
 
 interface ViewWeeksProps {
   weeks: LoggedWeek[] | null;
@@ -13,23 +13,23 @@ interface ViewWeeksProps {
 export function ViewWeeks({ weeks, onSelectWeek }: ViewWeeksProps) {
   return (
     <>
-      <ThemedText type='title'>History</ThemedText>
+      <ThemedText type="title">History</ThemedText>
       <ThemedView style={styles.container}>
-        {weeks ?
-          weeks.map((week, index) =>
+        {weeks ? (
+          weeks.map((week, index) => (
             <Button
               key={index}
-              mode='contained'
+              mode="contained"
               onPress={() => onSelectWeek(week)}
               style={styles.button}
               labelStyle={styles.buttonLabel}
             >
               {week.display}
             </Button>
-          )
-          :
+          ))
+        ) : (
           <ThemedText>No logs available</ThemedText>
-        }
+        )}
       </ThemedView>
     </>
   );
@@ -38,15 +38,15 @@ export function ViewWeeks({ weeks, onSelectWeek }: ViewWeeksProps) {
 const styles = StyleSheet.create({
   container: {
     gap: 20,
-    marginTop: 20
+    marginTop: 20,
   },
   buttonLabel: {
-    fontSize: 18
+    fontSize: 18,
   },
   button: {
-    backgroundColor: '#1D6A47',
+    backgroundColor: "#1D6A47",
     paddingVertical: 5,
     borderRadius: 5,
     height: 50,
-  }
+  },
 });

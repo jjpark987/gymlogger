@@ -1,9 +1,9 @@
-import { StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
-import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
+import { StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
+import { ThemedView } from "../ThemedView";
+import { ThemedText } from "../ThemedText";
 
-import { Day, Exercise } from '@/database/types';
+import { Day, Exercise } from "@/database/types";
 
 interface ExerciseSelectionProps {
   day: Day;
@@ -11,22 +11,26 @@ interface ExerciseSelectionProps {
   onSelectExercise: (exercise: Exercise | null) => void;
 }
 
-export function ExerciseSelection({ day, exercises, onSelectExercise }: ExerciseSelectionProps) {
+export function ExerciseSelection({
+  day,
+  exercises,
+  onSelectExercise,
+}: ExerciseSelectionProps) {
   return (
     <>
-      <ThemedText type='title'>{day.name}</ThemedText>
+      <ThemedText type="title">{day.name}</ThemedText>
       <ThemedView style={styles.container}>
-        {exercises.map((exercise, index) =>
+        {exercises.map((exercise, index) => (
           <Button
             key={index}
-            mode='contained'
+            mode="contained"
             onPress={() => onSelectExercise(exercise)}
             style={styles.button}
             labelStyle={styles.buttonLabel}
           >
-            {exercise ? exercise.name : '-'}
+            {exercise ? exercise.name : "-"}
           </Button>
-        )}
+        ))}
       </ThemedView>
     </>
   );
@@ -35,14 +39,14 @@ export function ExerciseSelection({ day, exercises, onSelectExercise }: Exercise
 const styles = StyleSheet.create({
   container: {
     gap: 50,
-    marginTop: 20
+    marginTop: 20,
   },
   buttonLabel: {
-    fontSize: 18
+    fontSize: 18,
   },
   button: {
-    backgroundColor: '#1D3D47',
+    backgroundColor: "#1D3D47",
     paddingVertical: 10,
-    borderRadius: 5
-  }
+    borderRadius: 5,
+  },
 });
