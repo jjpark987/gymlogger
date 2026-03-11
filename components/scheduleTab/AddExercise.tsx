@@ -57,7 +57,7 @@ export function AddExercise({
           />
         </ThemedView>
         <ThemedView>
-          <ThemedText>Is One Limb?</ThemedText>
+          <ThemedText>Is one limb?</ThemedText>
           <Switch
             value={newExercise.isOneArm}
             onValueChange={(value) =>
