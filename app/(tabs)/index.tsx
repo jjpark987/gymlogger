@@ -54,8 +54,8 @@ export default function Workout() {
 
       if (!updatedLogs[exerciseId]) {
         updatedLogs[exerciseId] = {
-          left: ["", "", "", ""],
-          right: ["", "", "", ""],
+          left: ["", "", ""],
+          right: ["", "", ""],
         };
       }
 

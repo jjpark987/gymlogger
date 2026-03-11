@@ -41,7 +41,7 @@ export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 30,
+    gap: 28,
     marginTop: 20,
   },
   buttonLabel: {
@@ -49,9 +49,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#1D3D6C",
-    paddingVertical: 5,
+    paddingVertical: 10,
     borderRadius: 5,
-    height: 50,
   },
   // Dim state to indicate a Rest weekday
   restButton: {

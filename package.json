@@ -5,8 +5,7 @@
   "scripts": {
     "start": "expo start",
     "lint": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write .",
-    "reset-project": "node ./scripts/reset-project.js"
+    "format": "prettier --write ."
   },
   "jest": {
     "preset": "jest-expo"

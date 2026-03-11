@@ -146,7 +146,7 @@ export function ExercisesOverview({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 30,
+    gap: 24,
     marginTop: 20,
   },
   buttonLabel: {

@@ -42,7 +42,7 @@ export function ExerciseLogging({
       {selectedExercise.isOneArm ? (
         <ThemedView style={styles.oneArmLogger}>
           <ThemedView style={styles.oneArmLoggerCol}>
-            {Array.from({ length: 4 }, (_, index) => (
+            {Array.from({ length: 3 }, (_, index) => (
               <TextInput
                 key={`left-${index}`}
                 placeholder={`Set ${index + 1}`}
@@ -60,7 +60,7 @@ export function ExerciseLogging({
             ))}
           </ThemedView>
           <ThemedView style={styles.oneArmLoggerCol}>
-            {Array.from({ length: 4 }, (_, index) => (
+            {Array.from({ length: 3 }, (_, index) => (
               <TextInput
                 key={`right-${index}`}
                 placeholder={`Set ${index + 1}`}
@@ -80,7 +80,7 @@ export function ExerciseLogging({
         </ThemedView>
       ) : (
         <ThemedView style={styles.twoArmLogger}>
-          {Array.from({ length: 4 }, (_, index) => (
+          {Array.from({ length: 3 }, (_, index) => (
             <TextInput
               key={`set-${index}`}
               placeholder={`Set ${index + 1}`}

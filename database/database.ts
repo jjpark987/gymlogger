@@ -8,20 +8,19 @@ export async function getDatabase() {
 }
 
 export async function resetDatabase() {
-  try {
-    if (
-      db &&
-      "closeAsync" in db &&
-      typeof (db as any).closeAsync === "function"
-    ) {
-      await (db as any).closeAsync().catch(() => {});
-    }
-    db = null;
-    await SQLite.deleteDatabaseAsync("gymLogger.db");
-    console.log("🗑️ Database deleted successfully");
-  } catch (error) {
-    console.error("❌ Error deleting database:", error);
-  }
+  const database = await getDatabase();
+
+  await database.execAsync(`
+    PRAGMA foreign_keys = OFF;
+    DROP TABLE IF EXISTS log;
+    DROP TABLE IF EXISTS exercise;
+    DROP TABLE IF EXISTS day;
+    DROP TABLE IF EXISTS app_settings;
+    DELETE FROM sqlite_sequence WHERE name IN ('log', 'exercise', 'day');
+    PRAGMA foreign_keys = ON;
+  `);
+
+  console.log("🗑️ Database tables reset successfully");
 }
 
 export async function debugSeedDatabase() {
@@ -62,25 +61,25 @@ export async function debugSeedDatabase() {
 
   const logData = {
     "2025-02-17": {
-      bench: [10, 9, 8, 7],
-      curlL: [10, 10, 8, 7],
-      curlR: [10, 10, 9, 8],
+      bench: [10, 9, 8],
+      curlL: [10, 10, 8],
+      curlR: [10, 10, 9],
     },
     "2025-02-24": {
-      bench: [10, 9, 9, 7],
-      curlL: [10, 10, 9, 7],
-      curlR: [10, 9, 9, 8],
+      bench: [10, 9, 9],
+      curlL: [10, 10, 9],
+      curlR: [10, 9, 9],
     },
     "2025-03-03": {
-      bench: [10, 10, 9, 7],
-      curlL: [10, 10, 9, 7],
-      curlR: [10, 10, 9, 7],
+      bench: [10, 10, 9],
+      curlL: [10, 10, 9],
+      curlR: [10, 10, 9],
     },
     // '2025-03-10': null,
     "2025-03-17": {
-      bench: [10, 10, 10, 8],
-      curlL: [10, 10, 10, 8],
-      curlR: [10, 10, 10, 8],
+      bench: [10, 10, 10],
+      curlL: [10, 10, 10],
+      curlR: [10, 10, 10],
     },
   };
 
@@ -92,7 +91,7 @@ export async function debugSeedDatabase() {
 
     for (const { id, isOneArm, weight } of exercises) {
       if (isOneArm) {
-        for (let setNum = 1; setNum <= 4; setNum++) {
+        for (let setNum = 1; setNum <= 3; setNum++) {
           logs.push({
             exerciseId: id,
             weight,
@@ -111,7 +110,7 @@ export async function debugSeedDatabase() {
           });
         }
       } else {
-        for (let setNum = 1; setNum <= 4; setNum++) {
+        for (let setNum = 1; setNum <= 3; setNum++) {
           logs.push({
             exerciseId: id,
             weight,

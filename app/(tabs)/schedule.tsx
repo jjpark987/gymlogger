@@ -1,10 +1,13 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { Alert, DevSettings, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useFocusEffect } from "@react-navigation/native";
+import { Button } from "react-native-paper";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { resetDatabase } from "@/database/database";
 import { getDays } from "@/database/day";
 import { Day, Exercise, InputExercise, Progress } from "@/database/types";
 import {
@@ -18,6 +21,7 @@ import { ScheduleOverview } from "@/components/scheduleTab/ScheduleOverview";
 import { ExercisesOverview } from "@/components/scheduleTab/ExercisesOverview";
 import { AddExercise } from "@/components/scheduleTab/AddExercise";
 import { ExerciseDetail } from "@/components/scheduleTab/ExerciseDetail";
+import { setupDatabase } from "@/database/setup";
 
 export default function Schedule() {
   const [days, setDays] = useState<Day[]>([]);
@@ -150,6 +154,18 @@ export default function Schedule() {
     );
   }
 
+  async function resetLocalDatabase() {
+    try {
+      await AsyncStorage.removeItem("dayLog");
+      await resetDatabase();
+      await setupDatabase();
+      DevSettings.reload();
+    } catch (error) {
+      console.error("❌ Error resetting local database:", error);
+      Alert.alert("Reset Failed", "Local database reset did not complete.");
+    }
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D6C" }}
@@ -211,7 +227,34 @@ export default function Schedule() {
             />
           )
         ) : (
-          <ScheduleOverview days={days} onSelectDay={viewExercises} />
+          <>
+            <ScheduleOverview days={days} onSelectDay={viewExercises} />
+            {__DEV__ ? (
+              <Button
+                mode="contained"
+                onPress={() =>
+                  Alert.alert(
+                    "Reset Database",
+                    "Delete all local schedule and log data?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Reset",
+                        style: "destructive",
+                        onPress: async () => {
+                          await resetLocalDatabase();
+                        },
+                      },
+                    ],
+                  )
+                }
+                style={styles.resetButton}
+                labelStyle={styles.resetButtonLabel}
+              >
+                Reset DB
+              </Button>
+            ) : null}
+          </>
         )}
       </KeyboardAwareScrollView>
     </ParallaxScrollView>
@@ -221,5 +264,16 @@ export default function Schedule() {
 const styles = StyleSheet.create({
   background: {
     marginTop: 20,
+  },
+  resetButton: {
+    backgroundColor: "#6C1D1D",
+    paddingVertical: 5,
+    borderRadius: 5,
+    marginVertical: 50,
+  },
+  resetButtonLabel: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 20,
   },
 });

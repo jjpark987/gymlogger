@@ -11,7 +11,7 @@ export async function setupExerciseTable() {
       isOneArm INTEGER NOT NULL CHECK (isOneArm IN (0, 1)),
       weight REAL NOT NULL DEFAULT 0,
       increment REAL NOT NULL DEFAULT 0,      
-      orderNum INTEGER NOT NULL CHECK (orderNum BETWEEN 1 AND 4),
+      orderNum INTEGER NOT NULL CHECK (orderNum BETWEEN 1 AND 5),
       
       FOREIGN KEY (dayId) REFERENCES day(id) ON DELETE CASCADE
     );
@@ -41,7 +41,13 @@ export async function getExercisesByDay(
     `SELECT * FROM exercise WHERE dayId = ? ORDER BY orderNum ASC`,
     [dayId],
   )) as Exercise[];
-  const orderedExercises: (Exercise | null)[] = [null, null, null, null];
+  const orderedExercises: (Exercise | null)[] = [
+    null,
+    null,
+    null,
+    null,
+    null,
+  ];
   exercises.forEach((exercise) => {
     orderedExercises[exercise.orderNum - 1] = exercise;
   });

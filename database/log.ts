@@ -21,7 +21,7 @@ export async function setupLogTable() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       exerciseId INTEGER NOT NULL,
       weight REAL NOT NULL,
-      setNum INTEGER NOT NULL CHECK (setNum BETWEEN 1 AND 4),
+      setNum INTEGER NOT NULL CHECK (setNum BETWEEN 1 AND 3),
       isLeft INTEGER CHECK (isLeft IN (0, 1)),
       reps INTEGER NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -69,7 +69,7 @@ export async function insertDayLogs(dayLogs: DayLogs): Promise<void> {
       ]);
     }
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       if (exercise.isOneArm) {
         if (log.left[i] !== undefined) {
           insertPromises.push(
@@ -222,11 +222,11 @@ export async function getLoggedExercisesByDate(
     [date],
   )) as Exercise[];
 
-  const exercisesArray: (Exercise | null)[] = [null, null, null, null];
+  const exercisesArray: (Exercise | null)[] = [null, null, null, null, null];
 
   results.forEach((exercise) => {
     const position = exercise.orderNum - 1;
-    if (position >= 0 && position < 4) {
+    if (position >= 0 && position < 5) {
       exercisesArray[position] = exercise;
     }
   });
@@ -254,13 +254,13 @@ export async function getLogsByExercise(
   }[];
 
   const dayLog = {
-    left: exercise.isOneArm ? Array(4).fill({ id: null, reps: 0 }) : [],
-    right: Array(4).fill({ id: null, reps: 0 }),
+    left: exercise.isOneArm ? Array(3).fill({ id: null, reps: 0 }) : [],
+    right: Array(3).fill({ id: null, reps: 0 }),
     weight: results[0]?.weight,
   };
 
   results.forEach((log) => {
-    if (log.setNum >= 1 && log.setNum <= 4) {
+    if (log.setNum >= 1 && log.setNum <= 3) {
       if (exercise.isOneArm) {
         if (log.isLeft) {
           dayLog.left[log.setNum - 1] = { id: log.id, reps: log.reps };

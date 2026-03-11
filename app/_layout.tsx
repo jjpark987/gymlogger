@@ -12,7 +12,6 @@ import "react-native-reanimated";
 
 import { DayProvider } from "@/context/DayContext";
 import { setupDatabase } from "@/database/setup";
-// import { resetDatabase } from "@/database/database";
 import { useColorScheme } from "@/hooks/useColorScheme";
 // import { registerBackgroundTask } from '@/tasks/taskManager';
 
@@ -26,7 +25,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function initDatabase() {
-      // await resetDatabase();
       await setupDatabase();
       SplashScreen.hideAsync();
     }
