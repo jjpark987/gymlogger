@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "gymlogger",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false
     },
@@ -35,7 +34,7 @@
       }
     },
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/60e569b2-925a-435e-80fb-1ce5b0ac10b6"

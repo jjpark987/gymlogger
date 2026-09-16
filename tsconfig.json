@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "esnext",
     "strict": true,
+    "types": ["jest"],
     "paths": {
       "@/*": ["./*"]
     }

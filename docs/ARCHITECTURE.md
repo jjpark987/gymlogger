@@ -110,6 +110,6 @@ assets/                 Packaged iPhone images
 
 ## Runtime And Release
 
-`app.json` contains the EAS project ID, update URL, and an app-version runtime policy. There is no `eas.json` and no repository deployment automation. The app is configured for iPhone only and does not claim web support.
+`app.json` contains the EAS project ID, update URL, and a fingerprint runtime policy. Native dependency changes produce a new runtime fingerprint, so a compatible iPhone build must exist before an update is published. There is no `eas.json` and no repository deployment automation. The app is configured for iPhone only and does not claim web support.
 
 The intended Git default branch and EAS Update branch are both named `dev`, but they are independent: renaming one does not rename the other. Publishing remains an explicit external action.

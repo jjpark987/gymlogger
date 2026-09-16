@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
@@ -26,7 +26,7 @@ export function ExercisesOverview({
 }: ExercisesOverviewProps) {
   const [reorderMode, setReorderMode] = useState(false);
   const [selectedForSwap, setSelectedForSwap] = useState<Exercise | null>(null);
-  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const [shakeAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (reorderMode) {
@@ -55,7 +55,6 @@ export function ExercisesOverview({
     } else {
       shakeAnim.stopAnimation();
       shakeAnim.setValue(0);
-      setSelectedForSwap(null);
     }
   }, [reorderMode, shakeAnim]);
 

@@ -2,7 +2,7 @@
 
 ## Scope
 
-- GymLogger is a small, offline iPhone app built with Expo SDK 54, React Native, React, Expo Router, and strict TypeScript.
+- GymLogger is a small, offline iPhone app built with Expo SDK 57, React Native, React, Expo Router, and strict TypeScript.
 - There is no backend, API, authentication, account system, or cloud sync. Do not add assumptions about them without an explicit task.
 - SQLite is the durable source of truth. AsyncStorage contains only the unfinished workout draft.
 - Use npm and preserve `package-lock.json`. All direct dependencies in `package.json` are intentionally pinned to exact versions.
@@ -38,6 +38,7 @@ npm run check
 - Use `npm run lint:fix` or `npm run format:write` only when changes are intended.
 - `npm run check` runs the full repository check sequence.
 - For Expo configuration changes, also run `npx expo config --type public` and an iOS export outside the repository.
+- Expo SDK 57 requires Node.js 22.13 or newer and Xcode 26.4 or newer for local iOS builds.
 
 ## Repository Boundaries
 
@@ -45,6 +46,7 @@ npm run check
 - Do not manually edit generated Expo types. `.expo/types/**/*.ts` remains included for typed routes.
 - This repository targets iPhone. Do not describe Android or web as supported from dependency or framework capability alone.
 - Do not publish EAS updates, change the EAS project ID, or change app/runtime versions unless explicitly requested. The intended Git and EAS Update branch is `dev`; those branches remain independent service-side resources.
+- EAS Update uses the fingerprint runtime policy. Native dependency changes require a new compatible build before publishing an update.
 
 ## Domain Invariants
 

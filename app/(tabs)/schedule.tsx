@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useState } from "react";
 import { Alert, DevSettings, StyleSheet } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useFocusEffect } from "@react-navigation/native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button } from "react-native-paper";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";

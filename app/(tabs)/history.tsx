@@ -1,7 +1,7 @@
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { ViewDays } from "@/components/historyTab/ViewDays";
 import { ViewExercises } from "@/components/historyTab/ViewExercises";
