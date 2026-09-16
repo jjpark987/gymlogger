@@ -45,8 +45,8 @@ npm run check
 - Ignore `.kilo/`, `.expo/`, `dist/`, and `node_modules/` as source. `.kilo/` may contain duplicate checkouts that must not be searched or tested as part of this checkout.
 - Do not manually edit generated Expo types. `.expo/types/**/*.ts` remains included for typed routes.
 - This repository targets iPhone. Do not describe Android or web as supported from dependency or framework capability alone.
-- Do not publish EAS updates, change the EAS project ID, or change app/runtime versions unless explicitly requested. The intended Git and EAS Update branch is `dev`; those branches remain independent service-side resources.
-- EAS Update uses the fingerprint runtime policy. Native dependency changes require a new compatible build before publishing an update.
+- Do not change the EAS project ID or app/runtime versions unless explicitly requested. The intended Git and EAS Update branch is `dev`; those branches remain independent service-side resources.
+- EAS Update uses the fingerprint runtime policy. Standalone builds can only receive updates with a compatible runtime. Expo Go previews may be published after native dependency changes only when every native dependency is supported by that Expo Go SDK.
 
 ## Domain Invariants
 
@@ -79,3 +79,10 @@ npm run check
 - Workout persistence changes must cover incomplete drafts, successful saves, failed saves, double taps, and progression.
 - Exercise deletion changes must verify that the chosen history behavior remains explicit and consistent.
 - The Jest suite intentionally covers only pure progress/date transformations. Do not add broad snapshots or mocked component suites without a concrete regression to protect.
+
+## Delivery
+
+- Unless the user explicitly says not to, finish every repository change by committing it, pushing it directly to GitHub branch `dev`, and publishing the committed iOS bundle to EAS Update branch `dev`.
+- Publish with `eas update --branch dev --environment production --platform ios --message "<meaningful message>"`. Do not publish Android or web bundles.
+- Run required validation before delivery. Publish from a clean worktree and verify the EAS update references the pushed Git commit.
+- If GitHub push or EAS publication fails, report the concrete blocker instead of treating delivery as complete.

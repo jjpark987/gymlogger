@@ -44,5 +44,5 @@ Scan the QR code on an iPhone via Expo app to run.
 1. Push an update to Expo's cloud
 
 ```zsh
-eas update --branch dev --environment production --message "Update message"
+eas update --branch dev --environment production --platform ios --message "Update message"
 ```
