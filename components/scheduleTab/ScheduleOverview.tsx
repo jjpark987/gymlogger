@@ -18,9 +18,6 @@ export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
   return (
     <>
       <ThemedText type="title">Schedule</ThemedText>
-      <ThemedText style={styles.instructions}>
-        Long press a weekday to mark or unmark it as a rest day.
-      </ThemedText>
       <ThemedView style={styles.container}>
         {days.map((day) => {
           const rest = isWeekdayRest(day.id); // day.id is 0..4 for Mon..Fri
@@ -48,10 +45,6 @@ const styles = StyleSheet.create({
   container: {
     gap: 28,
     marginTop: 20,
-  },
-  instructions: {
-    color: "gray",
-    marginTop: 8,
   },
   buttonLabel: {
     fontSize: 18,
