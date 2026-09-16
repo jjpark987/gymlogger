@@ -41,13 +41,7 @@ export async function getExercisesByDay(
     `SELECT * FROM exercise WHERE dayId = ? ORDER BY orderNum ASC`,
     [dayId],
   )) as Exercise[];
-  const orderedExercises: (Exercise | null)[] = [
-    null,
-    null,
-    null,
-    null,
-    null,
-  ];
+  const orderedExercises: (Exercise | null)[] = [null, null, null, null, null];
   exercises.forEach((exercise) => {
     orderedExercises[exercise.orderNum - 1] = exercise;
   });

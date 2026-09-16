@@ -47,6 +47,12 @@ interface DayLog {
 
 export type DayLogs = { [exerciseId: number]: DayLog };
 
+export interface WorkoutDraft {
+  date: string;
+  dayId: number;
+  logs: DayLogs;
+}
+
 export interface DayLogIds {
   left: { id: number | null; reps: number }[];
   right: { id: number | null; reps: number }[];

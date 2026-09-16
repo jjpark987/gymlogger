@@ -12,11 +12,15 @@ interface ScheduleOverviewProps {
 }
 
 export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
-  const { isWeekdayRest, toggleWeekdayRest } = useDay();
+  const { isWeekdayRest, toggleWeekdayRest, restSettingsReady, restDaySaving } =
+    useDay();
 
   return (
     <>
       <ThemedText type="title">Schedule</ThemedText>
+      <ThemedText style={styles.instructions}>
+        Long press a weekday to mark or unmark it as a rest day.
+      </ThemedText>
       <ThemedView style={styles.container}>
         {days.map((day) => {
           const rest = isWeekdayRest(day.id); // day.id is 0..4 for Mon..Fri
@@ -26,6 +30,7 @@ export function ScheduleOverview({ days, onSelectDay }: ScheduleOverviewProps) {
               mode="contained"
               onPress={() => onSelectDay(day.id)}
               onLongPress={() => toggleWeekdayRest(day.id)}
+              disabled={!restSettingsReady || restDaySaving}
               style={[styles.button, rest && styles.restButton]}
               labelStyle={styles.buttonLabel}
               accessibilityLabel={`${day.name}${rest ? " (Rest day)" : ""}`}
@@ -44,6 +49,10 @@ const styles = StyleSheet.create({
     gap: 28,
     marginTop: 20,
   },
+  instructions: {
+    color: "gray",
+    marginTop: 8,
+  },
   buttonLabel: {
     fontSize: 18,
   },
@@ -52,7 +61,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
   },
-  // Dim state to indicate a Rest weekday
   restButton: {
     opacity: 0.6,
   },

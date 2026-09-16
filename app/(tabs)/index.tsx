@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState } from "react";
-import { StyleSheet } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Alert, StyleSheet } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button } from "react-native-paper";
@@ -14,7 +14,15 @@ import { RestDay } from "@/components/workoutTab/RestDay";
 import { useDay } from "@/context/DayContext";
 import { getExercisesByDay } from "@/database/exercise";
 import { insertDayLogs } from "@/database/log";
-import { DayLogs, Exercise } from "@/database/types";
+import { DayLogs, Exercise, WorkoutDraft } from "@/database/types";
+
+function getLocalDateKey(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
 
 export default function Workout() {
   const { dayOfWeek, isDateRest } = useDay();
@@ -24,6 +32,8 @@ export default function Workout() {
   );
   const [dayLogs, setDayLogs] = useState<DayLogs | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -33,8 +43,21 @@ export default function Workout() {
       }
       async function loadDayLogs() {
         const storedLogs = await AsyncStorage.getItem("dayLog");
-        if (storedLogs) {
-          setDayLogs(JSON.parse(storedLogs));
+        if (!storedLogs) {
+          setDayLogs(null);
+          return;
+        }
+
+        const draft = JSON.parse(storedLogs) as WorkoutDraft;
+        if (
+          draft.date === getLocalDateKey() &&
+          draft.dayId === dayOfWeek.id &&
+          draft.logs
+        ) {
+          setDayLogs(draft.logs);
+        } else {
+          await AsyncStorage.removeItem("dayLog");
+          setDayLogs(null);
         }
       }
       fetchExercises();
@@ -75,21 +98,79 @@ export default function Workout() {
         updatedLogs[exerciseId].right[setIndex] = newReps;
       }
 
-      AsyncStorage.setItem("dayLog", JSON.stringify(updatedLogs));
+      const draft: WorkoutDraft = {
+        date: getLocalDateKey(),
+        dayId: dayOfWeek.id,
+        logs: updatedLogs,
+      };
+      void AsyncStorage.setItem("dayLog", JSON.stringify(draft));
 
       return updatedLogs;
     });
   }
 
   async function saveLogState() {
-    if (!dayLogs) return;
+    if (!dayLogs || savingRef.current) return;
 
-    await insertDayLogs(dayLogs);
-    await AsyncStorage.removeItem("dayLog");
-    setDayLogs(null);
+    const exerciseById = new Map(
+      exercises
+        .filter((exercise): exercise is Exercise => exercise !== null)
+        .map((exercise) => [exercise.id, exercise]),
+    );
+    const touchedLogs: DayLogs = {};
 
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 5000);
+    for (const [exerciseId, log] of Object.entries(dayLogs)) {
+      const exercise = exerciseById.get(Number(exerciseId));
+      if (!exercise) {
+        Alert.alert(
+          "Workout Changed",
+          "An exercise in this draft no longer exists. Review the workout before saving.",
+        );
+        return;
+      }
+
+      const applicableSets = exercise.isOneArm
+        ? [...log.left, ...log.right]
+        : log.right;
+      if (!applicableSets.some((set) => set !== "")) continue;
+
+      if (
+        applicableSets.length !== (exercise.isOneArm ? 6 : 3) ||
+        applicableSets.some((set) => set === "")
+      ) {
+        Alert.alert(
+          "Incomplete Exercise",
+          `Complete every set for ${exercise.name} before saving.`,
+        );
+        return;
+      }
+
+      touchedLogs[Number(exerciseId)] = log;
+    }
+
+    if (Object.keys(touchedLogs).length === 0) {
+      Alert.alert("Nothing to Save", "Enter reps for at least one exercise.");
+      return;
+    }
+
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      await insertDayLogs(touchedLogs);
+      await AsyncStorage.removeItem("dayLog");
+      setDayLogs(null);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    } catch (error) {
+      console.error("Error saving workout:", error);
+      Alert.alert(
+        "Save Failed",
+        "The workout was not saved. Your draft remains.",
+      );
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   }
 
   return (
@@ -140,7 +221,9 @@ export default function Workout() {
             )}
             <Button
               mode="contained"
-              onPress={() => saveLogState()}
+              onPress={saveLogState}
+              disabled={saving}
+              loading={saving}
               style={{
                 backgroundColor: "white",
                 paddingVertical: 5,
@@ -153,7 +236,7 @@ export default function Workout() {
                 fontSize: 20,
               }}
             >
-              Save
+              {saving ? "Saving" : "Save"}
             </Button>
           </KeyboardAwareScrollView>
         </ParallaxScrollView>

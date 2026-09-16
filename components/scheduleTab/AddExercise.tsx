@@ -10,6 +10,7 @@ interface AddExerciseProps {
   setNewExercise: (exercise: InputExercise) => void;
   onSaveNewExercise: () => Promise<void>;
   onBack: () => void;
+  saving: boolean;
 }
 
 export function AddExercise({
@@ -17,6 +18,7 @@ export function AddExercise({
   setNewExercise,
   onSaveNewExercise,
   onBack,
+  saving,
 }: AddExerciseProps) {
   return (
     <>
@@ -33,7 +35,7 @@ export function AddExercise({
         <ThemedView style={styles.inputContainer}>
           <TextInput
             placeholder="Weight"
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={
               newExercise.weight === "" ? "" : newExercise.weight.toString()
             }
@@ -44,7 +46,7 @@ export function AddExercise({
           />
           <TextInput
             placeholder="Increment"
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={
               newExercise.increment === ""
                 ? ""
@@ -72,14 +74,17 @@ export function AddExercise({
         <Button
           mode="contained"
           onPress={onSaveNewExercise}
+          disabled={saving}
+          loading={saving}
           style={styles.button}
           labelStyle={styles.buttonLabel}
         >
-          Save
+          {saving ? "Saving" : "Save"}
         </Button>
         <Button
           mode="contained"
           onPress={onBack}
+          disabled={saving}
           style={styles.backButton}
           labelStyle={styles.buttonLabel}
         >

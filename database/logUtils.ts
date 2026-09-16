@@ -17,14 +17,16 @@ export function calculateWeeklyVolumes(
   ) as { createdAt: string; reps: number; weight: number; isLeft: boolean }[];
 
   validResults.forEach(({ createdAt, reps, weight, isLeft }) => {
-    const utcDate = new Date(createdAt);
-
-    const dayOfWeek = utcDate.getDay();
+    const [year, month, day] = createdAt.slice(0, 10).split("-").map(Number);
+    const localDate = new Date(year, month - 1, day);
+    const dayOfWeek = localDate.getDay();
     const dayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-    const weekStart = new Date(utcDate);
-    weekStart.setDate(utcDate.getDate() + dayOffset);
-    const weekKey = weekStart.toISOString().split("T")[0];
+    const weekStart = new Date(year, month - 1, day + dayOffset);
+    const weekKey = [
+      weekStart.getFullYear(),
+      String(weekStart.getMonth() + 1).padStart(2, "0"),
+      String(weekStart.getDate()).padStart(2, "0"),
+    ].join("-");
 
     if (!weeklyVolumes[weekKey]) {
       weeklyVolumes[weekKey] = exercise.isOneArm
@@ -46,14 +48,12 @@ export function calculateWeeklyVolumes(
   return weeklyVolumes;
 }
 
-export function generateWeeksAndLabels(): WeeksAndLabels | null {
-  const today = new Date();
+export function generateWeeksAndLabels(today = new Date()): WeeksAndLabels {
+  const dayOffset = today.getDay() === 0 ? -6 : 1 - today.getDay();
   const latestExpectedWeek = new Date(
-    Date.UTC(
-      today.getUTCFullYear(),
-      today.getUTCMonth(),
-      today.getUTCDate() - today.getUTCDay() + 1,
-    ),
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() + dayOffset,
   );
 
   const lastFiveWeeks: string[] = [];
@@ -61,8 +61,12 @@ export function generateWeeksAndLabels(): WeeksAndLabels | null {
 
   for (let i = 4; i >= 0; i--) {
     const weekStart = new Date(latestExpectedWeek);
-    weekStart.setDate(latestExpectedWeek.getDate() - i * 7);
-    const weekKey = weekStart.toISOString().split("T")[0];
+    weekStart.setDate(weekStart.getDate() - i * 7);
+    const weekKey = [
+      weekStart.getFullYear(),
+      String(weekStart.getMonth() + 1).padStart(2, "0"),
+      String(weekStart.getDate()).padStart(2, "0"),
+    ].join("-");
 
     lastFiveWeeks.push(weekKey);
 
@@ -72,9 +76,14 @@ export function generateWeeksAndLabels(): WeeksAndLabels | null {
       weekStart.getMonth(),
       1,
     );
-    const firstDayWeekDay = firstDateOfMonth.getDay() || 7;
-
-    const weekNumber = Math.ceil((dayOfMonth + firstDayWeekDay - 1) / 7);
+    const firstWeekday = firstDateOfMonth.getDay();
+    const offsetToMonday =
+      firstWeekday === 0 ? 1 : firstWeekday === 1 ? 0 : 8 - firstWeekday;
+    const firstMonday = 1 + offsetToMonday;
+    const weekNumber =
+      dayOfMonth >= firstMonday
+        ? Math.floor((dayOfMonth - firstMonday) / 7) + 1
+        : 1;
     const monthAbbrev = weekStart.toLocaleString("en-US", { month: "short" });
 
     labels.push(`${monthAbbrev} W${weekNumber} ${weekStart.getFullYear()}`);

@@ -10,6 +10,7 @@ interface UpdateExerciseProps {
   onBack: () => void;
   onSaveExercise: () => Promise<void>;
   onDeleteExercise: () => Promise<void>;
+  saving: boolean;
 }
 
 export function UpdateExercise({
@@ -18,6 +19,7 @@ export function UpdateExercise({
   onBack,
   onSaveExercise,
   onDeleteExercise,
+  saving,
 }: UpdateExerciseProps) {
   return (
     <>
@@ -33,7 +35,7 @@ export function UpdateExercise({
         <ThemedView style={styles.inputContainer}>
           <TextInput
             placeholder="Weight"
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={updatedExercise.weight.toString()}
             onChangeText={(text) =>
               setUpdatedExercise({ ...updatedExercise, weight: text })
@@ -42,7 +44,7 @@ export function UpdateExercise({
           />
           <TextInput
             placeholder="Increment"
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={updatedExercise.increment.toString()}
             onChangeText={(text) =>
               setUpdatedExercise({ ...updatedExercise, increment: text })
@@ -55,6 +57,7 @@ export function UpdateExercise({
         <Button
           mode="contained"
           onPress={onBack}
+          disabled={saving}
           style={styles.backButton}
           labelStyle={styles.buttonLabel}
         >
@@ -63,14 +66,17 @@ export function UpdateExercise({
         <Button
           mode="contained"
           onPress={onSaveExercise}
+          disabled={saving}
+          loading={saving}
           style={styles.button}
           labelStyle={styles.buttonLabel}
         >
-          Save
+          {saving ? "Saving" : "Save"}
         </Button>
         <Button
           mode="contained"
           onPress={() => onDeleteExercise()}
+          disabled={saving}
           style={styles.delButton}
           labelStyle={styles.buttonLabel}
         >

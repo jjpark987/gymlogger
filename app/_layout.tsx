@@ -3,39 +3,33 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
 import { DayProvider } from "@/context/DayContext";
 import { setupDatabase } from "@/database/setup";
 import { useColorScheme } from "@/hooks/useColorScheme";
-// import { registerBackgroundTask } from '@/tasks/taskManager';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
+  const [databaseReady, setDatabaseReady] = useState(false);
 
   useEffect(() => {
     async function initDatabase() {
       await setupDatabase();
-      SplashScreen.hideAsync();
+      setDatabaseReady(true);
+      await SplashScreen.hideAsync();
     }
 
-    if (loaded) {
-      initDatabase();
-      // registerBackgroundTask();
-    }
-  }, [loaded]);
+    initDatabase();
+  }, []);
 
-  if (!loaded) {
+  if (!databaseReady) {
     return null;
   }
 

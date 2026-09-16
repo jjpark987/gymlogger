@@ -19,6 +19,7 @@ interface ExerciseDetailProps {
   onSaveExercise: () => Promise<void>;
   onBack: () => void;
   onDeleteExercise: () => Promise<void>;
+  saving: boolean;
 }
 
 export function ExerciseDetail({
@@ -30,6 +31,7 @@ export function ExerciseDetail({
   onSaveExercise,
   onBack,
   onDeleteExercise,
+  saving,
 }: ExerciseDetailProps) {
   const [viewExercise, setViewExercise] = useState<boolean>(false);
 
@@ -79,6 +81,7 @@ export function ExerciseDetail({
           }}
           onSaveExercise={onSaveExercise}
           onDeleteExercise={onDeleteExercise}
+          saving={saving}
         />
       ) : (
         <ExerciseProgress

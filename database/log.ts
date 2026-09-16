@@ -33,93 +33,81 @@ export async function setupLogTable() {
 
 export async function insertDayLogs(dayLogs: DayLogs): Promise<void> {
   const db = await getDatabase();
-
-  const insertQuery = `
-    INSERT INTO log (exerciseId, weight, setNum, isLeft, reps, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-
   const utcString = new Date().toISOString();
 
-  const insertPromises = [];
+  await db.withExclusiveTransactionAsync(async (transaction) => {
+    for (const exerciseId in dayLogs) {
+      const log = dayLogs[exerciseId];
+      const exercise = await transaction.getFirstAsync<Exercise>(
+        `SELECT * FROM exercise WHERE id = ?`,
+        [Number(exerciseId)],
+      );
 
-  for (const exerciseId in dayLogs) {
-    const log = dayLogs[exerciseId];
-    const exercise: Exercise | null = await db.getFirstAsync(
-      `SELECT * FROM exercise WHERE id = ?`,
-      [Number(exerciseId)],
-    );
+      if (!exercise) {
+        throw new Error(`Exercise ${exerciseId} no longer exists.`);
+      }
 
-    if (!exercise) continue;
+      const allSets = exercise.isOneArm
+        ? [...log.left, ...log.right]
+        : log.right;
 
-    if (
-      log.left.some((set) => set === "") ||
-      log.right.some((set) => set === "")
-    )
-      continue;
+      if (allSets.length !== (exercise.isOneArm ? 6 : 3)) {
+        throw new Error(`Exercise ${exercise.name} is incomplete.`);
+      }
 
-    const allSets = exercise.isOneArm ? [...log.left, ...log.right] : log.right;
+      if (allSets.some((set) => set === "")) {
+        throw new Error(`Exercise ${exercise.name} is incomplete.`);
+      }
 
-    if (allSets.every((set) => set === 10)) {
-      const newWeight = exercise.weight + exercise.increment;
+      if (allSets.every((set) => set === 10)) {
+        await transaction.runAsync(
+          `UPDATE exercise SET weight = ? WHERE id = ?`,
+          [exercise.weight + exercise.increment, exercise.id],
+        );
+      }
 
-      await db.runAsync(`UPDATE exercise SET weight = ? WHERE id = ?`, [
-        newWeight,
-        exerciseId,
-      ]);
-    }
-
-    for (let i = 0; i < 3; i++) {
-      if (exercise.isOneArm) {
-        if (log.left[i] !== undefined) {
-          insertPromises.push(
-            db.runAsync(insertQuery, [
-              exerciseId,
-              exercise.weight,
-              i + 1,
-              true,
-              log.left[i] === "" ? null : log.left[i],
-              utcString,
-            ]),
+      for (let i = 0; i < 3; i++) {
+        if (exercise.isOneArm) {
+          await transaction.runAsync(
+            `INSERT INTO log (exerciseId, weight, setNum, isLeft, reps, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [exercise.id, exercise.weight, i + 1, 1, log.left[i], utcString],
           );
-        }
-        if (log.right[i] !== undefined) {
-          insertPromises.push(
-            db.runAsync(insertQuery, [
-              exerciseId,
-              exercise.weight,
-              i + 1,
-              false,
-              log.right[i] === "" ? null : log.right[i],
-              utcString,
-            ]),
+          await transaction.runAsync(
+            `INSERT INTO log (exerciseId, weight, setNum, isLeft, reps, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [exercise.id, exercise.weight, i + 1, 0, log.right[i], utcString],
           );
-        }
-      } else {
-        if (log.right[i] !== undefined) {
-          insertPromises.push(
-            db.runAsync(insertQuery, [
-              exerciseId,
+        } else {
+          await transaction.runAsync(
+            `INSERT INTO log (exerciseId, weight, setNum, isLeft, reps, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              exercise.id,
               exercise.weight,
               i + 1,
               null,
-              log.right[i] === "" ? null : log.right[i],
+              log.right[i],
               utcString,
-            ]),
+            ],
           );
         }
       }
     }
-  }
-
-  await Promise.all(insertPromises);
+  });
 }
 
 export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   const db = await getDatabase();
 
   const results = (await db.getAllAsync(
-    `SELECT createdAt, reps, weight, isLeft, exerciseId FROM log ORDER BY createdAt DESC;`,
+    `SELECT datetime(createdAt, 'localtime') AS createdAt,
+            reps,
+            weight,
+            isLeft,
+            exerciseId
+     FROM log
+     ORDER BY createdAt DESC;`,
   )) as LogResult[];
 
   if (!results.length) return null;
@@ -131,14 +119,16 @@ export async function getLoggedWeeks(): Promise<LoggedWeek[] | null> {
   );
 
   validResults.forEach(({ createdAt }) => {
-    const utcDate = new Date(createdAt);
-
-    const dayOfWeek = utcDate.getDay();
+    const [year, month, day] = createdAt.slice(0, 10).split("-").map(Number);
+    const localDate = new Date(year, month - 1, day);
+    const dayOfWeek = localDate.getDay();
     const dayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-    const weekStart = new Date(utcDate);
-    weekStart.setDate(utcDate.getDate() + dayOffset);
-    const weekKey = weekStart.toISOString().split("T")[0];
+    const weekStart = new Date(year, month - 1, day + dayOffset);
+    const weekKey = [
+      weekStart.getFullYear(),
+      String(weekStart.getMonth() + 1).padStart(2, "0"),
+      String(weekStart.getDate()).padStart(2, "0"),
+    ].join("-");
 
     if (!loggedWeeks.some((week) => week.startDate === weekKey)) {
       const monthAbbrev = weekStart.toLocaleString("en-US", { month: "short" });
@@ -179,9 +169,9 @@ export async function getLoggedDaysByWeek(
   const db = await getDatabase();
 
   const results = (await db.getAllAsync(
-    `SELECT DISTINCT date(createdAt) AS loggedDate
+    `SELECT DISTINCT date(datetime(createdAt, 'localtime')) AS loggedDate
      FROM log
-     WHERE date(createdAt) BETWEEN date(?, 'weekday 1') AND date(?, 'weekday 5')
+     WHERE date(datetime(createdAt, 'localtime')) BETWEEN date(?) AND date(?, '+4 days')
      ORDER BY loggedDate ASC;`,
     [startDate, startDate],
   )) as { loggedDate: string }[];
@@ -189,8 +179,9 @@ export async function getLoggedDaysByWeek(
   const daysArray: (LoggedDay | null)[] = [null, null, null, null, null];
 
   results.forEach((day) => {
-    const loggedDate = new Date(day.loggedDate);
-    const dayOfWeek = loggedDate.getUTCDay();
+    const [year, month, date] = day.loggedDate.split("-").map(Number);
+    const loggedDate = new Date(year, month - 1, date);
+    const dayOfWeek = loggedDate.getDay();
 
     const index = dayOfWeek - 1;
 
@@ -198,7 +189,6 @@ export async function getLoggedDaysByWeek(
       daysArray[index] = {
         display: loggedDate.toLocaleDateString("en-US", {
           weekday: "long",
-          timeZone: "UTC",
         }),
         date: day.loggedDate,
       };
@@ -217,7 +207,7 @@ export async function getLoggedExercisesByDate(
     `SELECT DISTINCT e.*
     FROM log l
     JOIN exercise e ON l.exerciseId = e.id
-    WHERE DATE(l.createdAt) = ?
+    WHERE date(datetime(l.createdAt, 'localtime')) = date(?)
     ORDER BY e.orderNum ASC;`,
     [date],
   )) as Exercise[];
@@ -241,7 +231,7 @@ export async function getLogsByExercise(
   const db = await getDatabase();
 
   const results = (await db.getAllAsync(
-    `SELECT id, setNum, isLeft, reps, weight, datetime(createdAt, 'localtime') as createdAt FROM log 
+    `SELECT id, setNum, isLeft, reps, weight FROM log
     WHERE exerciseId = ? AND date(datetime(createdAt, 'localtime')) = date(?)
     ORDER BY setNum ASC;`,
     [exercise.id, date],
@@ -283,7 +273,8 @@ export async function getExerciseProgress(
 
   const results = (await db.getAllAsync(
     `SELECT datetime(createdAt, 'localtime') as createdAt, reps, weight, isLeft FROM log
-    WHERE exerciseId = ? AND strftime('%w', createdAt) BETWEEN '1' AND '5'
+    WHERE exerciseId = ?
+      AND strftime('%w', datetime(createdAt, 'localtime')) BETWEEN '1' AND '5'
     ORDER BY createdAt ASC;`,
     [exercise.id],
   )) as LogResult[];
@@ -293,8 +284,6 @@ export async function getExerciseProgress(
   const weeklyVolumes = calculateWeeklyVolumes(results, exercise);
 
   const weeksAndLabels = generateWeeksAndLabels();
-
-  if (weeksAndLabels === null) return null;
 
   const datasets = createDatasets(weeklyVolumes, weeksAndLabels, exercise);
 
